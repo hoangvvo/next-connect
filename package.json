@@ -2,7 +2,17 @@
   "name": "next-connect",
   "version": "0.0.1",
   "description": "The method routing and middleware layer for Next.js API Routes",
+  "keywords": [
+    "javascript",
+    "nextjs",
+    "middleware",
+    "router",
+    "connect"
+  ],
   "main": "lib/index.js",
+  "files": [
+    "lib/"
+  ],
   "scripts": {
     "lint": "eslint lib -c .eslintrc --ext js",
     "test": "nyc mocha",
