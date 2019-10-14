@@ -7,14 +7,9 @@ jobs:
       - image: circleci/node:12
     steps:
       - checkout
-      - run:
-          name: yarn
-          command: yarn
-      - run:
-          name: eslint
-          command: npx eslint
-      - run:
-          name: test and coverage
-          command: yarn coverage
+      - run: yarn install
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn coverage
       - codecov/upload:
           file: 'coverage.lcov'
