@@ -1,5 +1,10 @@
 # next-connect
 
+![npm](https://badgen.net/npm/v/next-connect)
+[![CircleCI](https://circleci.com/gh/hoangvvo/next-connect.svg?style=svg)](https://circleci.com/gh/hoangvvo/next-connect)
+[![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/master/graph/badge.svg)](https://codecov.io/gh/hoangvvo/next-connect)
+[![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
+
 The method routing and middleware layer for [Next.js](https://nextjs.org/) API Routes.
 
 ## Installation
