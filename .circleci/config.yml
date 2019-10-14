@@ -1,0 +1,20 @@
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.5
+jobs:
+  build:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - run:
+          name: yarn
+          command: yarn
+      - run:
+          name: eslint
+          command: npx eslint
+      - run:
+          name: test and coverage
+          command: yarn coverage
+      - codecov/upload:
+          file: 'coverage.lcov'
