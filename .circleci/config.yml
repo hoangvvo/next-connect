@@ -1,0 +1,29 @@
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.5
+jobs:
+  build:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run: yarn install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn coverage
+
+      - codecov/upload:
+          file: 'coverage.lcov'
