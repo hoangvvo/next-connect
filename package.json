@@ -4,7 +4,9 @@
   "description": "The method routing and middleware layer for Next.js API Routes",
   "main": "lib/index.js",
   "scripts": {
-    "lint": "eslint lib -c .eslintrc --ext js"
+    "lint": "eslint lib -c .eslintrc --ext js",
+    "test": "mocha",
+    "coverage": "nyc mocha && nyc report --reporter=text-lcov > coverage.lcov"
   },
   "repository": "git@github.com:hoangvvo/next-connect.git",
   "author": "Hoang Vo (https://www.hoangvvo.com)",
