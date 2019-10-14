@@ -1,0 +1,17 @@
+{
+  "name": "next-connect",
+  "version": "0.0.1",
+  "description": "The method routing and middleware layer for Next.js API Routes",
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "eslint lib -c .eslintrc --ext js"
+  },
+  "repository": "git@github.com:hoangvvo/next-connect.git",
+  "author": "Hoang Vo (https://www.hoangvvo.com)",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^6.5.1",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2"
+  }
+}
