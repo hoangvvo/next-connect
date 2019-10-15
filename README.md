@@ -62,26 +62,26 @@ handler.use(passport.initialize());
 Error middlewares will be called when an error is thrown. They should be placed at the end. Error middleware is similar to regular middleware except an addition `err` argument.
 
 ```javascript
-app.get(function (req, res) {
+handler.get(function (req, res) {
     throw new Error('Oh no!');
 })
 
-app.use(function (err, req, res, next) {
+handler.use(function (err, req, res, next) {
     console.error(err);
     res.status(500).end('Internal Server Error');
     //  Optional chaining
     next();
 })
-app.use(function (err, req, res, next) {
+handler.use(function (err, req, res, next) {
     logger.log(err);
 })
 ```
 
-Notice that an error middleware **must** have four arguments. In case you do not want to have the `next` argument, use `app.error()` instead.
+Notice that an error middleware **must** have four arguments. In case you do not want to have the `next` argument, use `handler.error()` instead.
 
 ```javascript
 //  This is still considered an error middleware
-app.error(function (err, res, res) {
+handler.error(function (err, res, res) {
     console.error(err);
 })
 ```
