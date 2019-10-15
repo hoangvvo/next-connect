@@ -19,7 +19,7 @@ yarn add next-connect
 
 `next-connect` is used in **Next.js 9 [API Routes](https://nextjs.org/docs#api-routes)** (those in `/pages/api/`). The usage is similar to [Express.js](https://github.com/expressjs/express/) but without `path` as the first argument.
 
-When doing `export default`, use `handler.export()`.
+When doing `export default`, use `handler`.
 
 ```javascript
 import nextConnect from 'next-connect'
@@ -38,13 +38,13 @@ handler.post(function (req, res) {
     res.json('Hi there');
 });
 
-//  export using handler.export()
-export default handler.export();
+//  export using handler
+export default handler;
 ```
 
 ### Use middleware
 
-Middleware is the core of `next-connect`. Middlewares are added as "stack" where the request and response object can be manipulated one-by-one as long as `next()` is called.
+Middleware is the core of `next-connect`. Middlewares are added as layers of a "stack" where the request and response will be routed through each layer one-by-one as long as `next()` is called.
 
 `handler.use(fn)`
 
