@@ -12,12 +12,13 @@ describe('nextConnect', () => {
   beforeEach(() => {
     handler = nextConnect();
   });
+
   context('method routing', () => {
     it('[method]() should response correctly to GET, POST, PUT, PATCH, DELETE', () => {
       httpMethods.forEach((method) => {
         handler[method]((req, res) => res.end(method));
       });
-      const app = createServer(handler.export());
+      const app = createServer(handler);
       const requestPromises = [];
       for (let i = 0; i < httpMethods.length; i += 1) {
         requestPromises.push(
@@ -27,10 +28,11 @@ describe('nextConnect', () => {
       return Promise.all(requestPromises);
     });
   });
+
   context('middleware', () => {
     it('use() should response to any method', () => {
       handler.use((req, res) => res.end('any'));
-      const app = createServer(handler.export());
+      const app = createServer(handler);
       const requestPromises = [];
       for (let i = 0; i < httpMethods.length; i += 1) {
         requestPromises.push(
@@ -48,20 +50,23 @@ describe('nextConnect', () => {
       handler.get((req, res) => {
         res.end(req.ok);
       });
-      const app = createServer(handler.export());
+      const app = createServer(handler);
       return request(app)
         .get('/')
         .expect('ok');
     });
 
     it('[method]() should be chainable', () => {
-      handler.get((req, res, next) => {
-        res.setHeader('x-ok', 'yes');
-        next();
-      }, (req, res) => {
-        res.end('ok');
-      });
-      const app = createServer(handler.export());
+      handler.get(
+        (req, res, next) => {
+          res.setHeader('x-ok', 'yes');
+          next();
+        },
+        (req, res) => {
+          res.end('ok');
+        },
+      );
+      const app = createServer(handler);
       return request(app)
         .get('/')
         .expect('x-ok', 'yes')
@@ -77,7 +82,7 @@ describe('nextConnect', () => {
       handler.use((err, req, res, next) => {
         res.end(err.message);
       });
-      const app = createServer(handler.export());
+      const app = createServer(handler);
       return request(app)
         .get('/')
         .expect('error');
@@ -90,7 +95,7 @@ describe('nextConnect', () => {
       handler.error((err, req, res) => {
         res.end(err.message);
       });
-      const app = createServer(handler.export());
+      const app = createServer(handler);
       return request(app)
         .get('/')
         .expect('error');
@@ -107,7 +112,7 @@ describe('nextConnect', () => {
       handler.error((err, req, res) => {
         res.end(err.message);
       });
-      const app = createServer(handler.export());
+      const app = createServer(handler);
       return request(app)
         .get('/')
         .expect((res) => {
@@ -118,18 +123,23 @@ describe('nextConnect', () => {
   });
 
   context('miscellaneous', () => {
-    it('nextContext() should return an instance of NextConnect', () => {
-      assert(nextConnect() instanceof nextConnect.NextConnect);
+    it('nextConnnet() should return a function with two argument', () => {
+      assert(typeof nextConnect() === 'function' && nextConnect().length === 2);
     });
+
     it('should return when run out of layer', () => {
-      handler.get((req, res, next) => {
-        next();
-      }, (req, res, next) => {
-        res.end('ok');
-        // should exit after this not to throw
-        next();
-      });
-      const app = createServer(handler.export());
+      handler.get(
+        (req, res, next) => {
+          next();
+        },
+        (req, res, next) => {
+          res.end('ok');
+          // should exit after this not to throw
+          next();
+        },
+      );
+
+      const app = createServer(handler);
       return request(app)
         .get('/')
         .expect('ok');
