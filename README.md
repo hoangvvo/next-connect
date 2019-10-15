@@ -44,22 +44,37 @@ export default handler.export();
 
 ### Use middleware
 
-`handler.use(callback)`
+Middleware is the core of `next-connect`. Middlewares are added as "stack" where the request and response object can be manipulated one-by-one as long as `next()` is called.
 
-`callback` is a function of `(req, res[, next])`.
+`handler.use(fn)`
+
+`fn` is a function of `(req, res[, next])`.
 
 ```javascript
 handler.use(function (req, res, next) {
-    //  Do some stuff with req and res
+    //  Do some stuff with req and res here
+    req.user = getUser(req);
+    //  Call next() to proceed to the next middleware in the chain
     next();
 })
-//  Using with a library such as PassportJS
+
+handler.use(function (req, res) {
+    if (req.user) res.end(`The user is ${req.user.name}`);
+    else res.end('There is no user');
+    //  next() is not called, the chain is terminated.
+})
+
+//  You can use a library too.
 handler.use(passport.initialize());
 ```
 
 #### Error middleware
 
-Error middlewares will be called when an error is thrown. They should be placed at the end. Error middleware is similar to regular middleware except an addition `err` argument.
+Error middlewares will be called when an error is thrown. They should be placed at the end.
+
+`Middlewares` that are not error handler will be skipped over. It is not neccessary for the former middleware to call `next()`. Calling `next(new Error())` will also trigger error middleware.
+
+Error middleware is similar to regular middleware except an addition `err` as the first argument.
 
 ```javascript
 handler.get(function (req, res) {
@@ -88,15 +103,11 @@ handler.error(function (err, res, res) {
 
 ### Method routing
 
-`handler.METHOD(callback[, callback ...])`
+`handler.METHOD(fn[, fn ...])`
 
-Route the HTTP request based on `METHOD`, where `METHOD` is the HTTP method (`GET`, `POST`, `PUT`, etc.) in lowercase.
+Response to the HTTP request based on `METHOD`, where `METHOD` is the HTTP method (`GET`, `POST`, `PUT`, etc.) in lowercase. (ex. `handler.post`, `handler.put`, ...)
 
-`callback` is a function of `(req, res[, next])`. Method routing can be viewed as a middleware if you call `next()`.
-
-There can be more than one argument, in which case it will act as a series of middleware functions.
-
-#### Example of a single callback
+`fn` is a function of `(req, res[, next])`. Such thing can be viewed as a middleware if you call `next()`. In fact, it can be considered a "conditional" middleware.
 
 ```javascript
 //  api/publicRoute.js
@@ -105,7 +116,7 @@ handler.post(function (req, res) {
 })
 ```
 
-#### Example of callbacks as middlewares
+The function can also accept more than one argument (function), in which case it will act as a series of middleware functions.
 
 ```javascript
 //  api/privateRoute.js
@@ -117,6 +128,8 @@ handler.post(isAuth, function (req, res) {
     res.json(req.user);
 })
 ```
+
+The next function in the chain will be executed as long as you call `next()` in the previous one.
 
 ## Contributing
 
