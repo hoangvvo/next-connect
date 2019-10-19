@@ -1,6 +1,7 @@
 # next-connect
 
-![npm](https://badgen.net/npm/v/next-connect)
+[![npm](https://badgen.net/npm/v/next-connect)](https://www.npmjs.com/package/next-connect)
+[![minified size](https://badgen.net/bundlephobia/min/next-connect)](https://bundlephobia.com/result?p=next-connect)
 [![CircleCI](https://circleci.com/gh/hoangvvo/next-connect.svg?style=svg)](https://circleci.com/gh/hoangvvo/next-connect)
 [![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/master/graph/badge.svg)](https://codecov.io/gh/hoangvvo/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
