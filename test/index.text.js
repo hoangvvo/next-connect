@@ -5,7 +5,7 @@ const { createServer } = require('http');
 const request = require('supertest');
 const nextConnect = require('../lib');
 
-const httpMethods = ['get', 'head', 'post', 'put', 'delete', 'connect', 'options', 'trace', 'patch'];
+const httpMethods = ['get', 'head', 'post', 'put', 'delete', 'options', 'trace', 'patch'];
 
 describe('nextConnect', () => {
   let handler;
@@ -22,7 +22,7 @@ describe('nextConnect', () => {
       const requestPromises = [];
       for (let i = 0; i < httpMethods.length; i += 1) {
         requestPromises.push(
-          request(app)[httpMethods[i]]('/').expect(httpMethods[i]),
+          request(app)[httpMethods[i]]('/').expect(httpMethods[i] !== 'head' ? httpMethods[i] : undefined),
         );
       }
       return Promise.all(requestPromises);
@@ -36,7 +36,7 @@ describe('nextConnect', () => {
       const requestPromises = [];
       for (let i = 0; i < httpMethods.length; i += 1) {
         requestPromises.push(
-          request(app)[httpMethods[i]]('/').expect('any'),
+          request(app)[httpMethods[i]]('/').expect(httpMethods[i] !== 'head' ? 'any' : undefined),
         );
       }
       return Promise.all(requestPromises);
