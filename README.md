@@ -131,6 +131,21 @@ handler.post(isAuth, function (req, res) {
 
 The next function in the chain will be executed as long as you call `next()` in the previous one.
 
+### 404
+
+If no response is sent, `next-connect` will return 404.
+
+```javascript
+//  api/somePostRoute
+handler.post(function (req, res) {
+    res.send('POST')
+});
+
+export default handler;
+
+//  Navigating to /api/somePostRoute on the browser will render 404.
+```
+
 ## Contributing
 
 Please see my [contributing.md](CONTRIBUTING.md).
