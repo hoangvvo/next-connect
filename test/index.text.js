@@ -56,6 +56,20 @@ describe('nextConnect', () => {
         .expect('ok');
     });
 
+    it('use() can reuse another instance', () => {
+      const handler2 = nextConnect();
+      handler2.use((req, res, next) => {
+        req.hello = 'world';
+        next();
+      });
+
+      handler.use(handler2);
+      handler.use((req, res) => res.end(req.hello));
+
+      const app = createServer(handler);
+      return request(app).get('/').expect('world');
+    });
+
     it('[method]() should be chainable', () => {
       handler.get(
         (req, res, next) => {
