@@ -5,7 +5,7 @@ const { createServer } = require('http');
 const request = require('supertest');
 const nextConnect = require('../lib');
 
-const httpMethods = ['get', 'post', 'put', 'patch', 'delete'];
+const httpMethods = ['get', 'head', 'post', 'put', 'delete', 'connect', 'options', 'trace', 'patch'];
 
 describe('nextConnect', () => {
   let handler;
@@ -14,7 +14,7 @@ describe('nextConnect', () => {
   });
 
   context('method routing', () => {
-    it('[method]() should response correctly to GET, POST, PUT, PATCH, DELETE', () => {
+    it('[method]() should response correctly to METHODS', () => {
       httpMethods.forEach((method) => {
         handler[method]((req, res) => res.end(method));
       });
