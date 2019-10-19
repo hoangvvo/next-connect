@@ -5,7 +5,7 @@ const { createServer } = require('http');
 const request = require('supertest');
 const nextConnect = require('../lib');
 
-const httpMethods = ['get', 'post', 'put', 'patch', 'delete'];
+const httpMethods = ['get', 'head', 'post', 'put', 'delete', 'options', 'trace', 'patch'];
 
 describe('nextConnect', () => {
   let handler;
@@ -14,7 +14,7 @@ describe('nextConnect', () => {
   });
 
   context('method routing', () => {
-    it('[method]() should response correctly to GET, POST, PUT, PATCH, DELETE', () => {
+    it('[method]() should response correctly to METHODS', () => {
       httpMethods.forEach((method) => {
         handler[method]((req, res) => res.end(method));
       });
@@ -22,7 +22,7 @@ describe('nextConnect', () => {
       const requestPromises = [];
       for (let i = 0; i < httpMethods.length; i += 1) {
         requestPromises.push(
-          request(app)[httpMethods[i]]('/').expect(httpMethods[i]),
+          request(app)[httpMethods[i]]('/').expect(httpMethods[i] !== 'head' ? httpMethods[i] : undefined),
         );
       }
       return Promise.all(requestPromises);
@@ -36,7 +36,7 @@ describe('nextConnect', () => {
       const requestPromises = [];
       for (let i = 0; i < httpMethods.length; i += 1) {
         requestPromises.push(
-          request(app)[httpMethods[i]]('/').expect('any'),
+          request(app)[httpMethods[i]]('/').expect(httpMethods[i] !== 'head' ? 'any' : undefined),
         );
       }
       return Promise.all(requestPromises);
