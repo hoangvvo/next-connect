@@ -144,5 +144,16 @@ describe('nextConnect', () => {
         .get('/')
         .expect('ok');
     });
+
+    it('should 404 if header not sent after stack ended', () => {
+      handler.post((req, res) => {
+        res.end('hmm');
+      });
+
+      const app = createServer(handler);
+      return request(app)
+        .get('/')
+        .expect(404);
+    });
   });
 });

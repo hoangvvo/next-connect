@@ -74,7 +74,7 @@ Error middlewares will be called when an error is thrown. They should be placed 
 
 `Middlewares` that are not error handler will be skipped over. It is not neccessary for the former middleware to call `next()`. Calling `next(new Error())` will also trigger error middleware.
 
-Error middleware is similar to regular middleware except an addition `err` as the first argument.
+Error middleware is similar to regular middleware except an additional `err` as the first argument.
 
 ```javascript
 handler.get(function (req, res) {
@@ -130,6 +130,21 @@ handler.post(isAuth, function (req, res) {
 ```
 
 The next function in the chain will be executed as long as you call `next()` in the previous one.
+
+### 404
+
+If no response is sent, `next-connect` will return 404.
+
+```javascript
+//  api/somePostRoute
+handler.post(function (req, res) {
+    res.send('POST')
+});
+
+export default handler;
+
+//  Navigating to /api/somePostRoute in the browser will render 404.
+```
 
 ## Contributing
 
