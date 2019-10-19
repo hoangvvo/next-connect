@@ -85,8 +85,8 @@ handler.get(function (req, res) {
 handler.use(function (err, req, res, next) {
     console.error(err);
     res.status(500).end('Internal Server Error');
-    //  Optional chaining
-    next();
+    //  Pass along the error to another error handler
+    next(err);
 })
 handler.use(function (err, req, res, next) {
     logger.log(err);
