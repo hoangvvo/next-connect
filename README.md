@@ -23,7 +23,8 @@ yarn add next-connect
 When doing `export default`, use `handler`.
 
 ```javascript
-import nextConnect from 'next-connect'
+import nextConnect from 'next-connect';
+
 const handler = nextConnect();
 
 //  use middleware
@@ -100,6 +101,38 @@ Notice that an error middleware **must** have four arguments. In case you do not
 handler.error(function (err, res, res) {
     console.error(err);
 })
+```
+
+#### Reuse middleware
+
+An instance of `NextConnect` may be reused.
+
+```javascript
+//  middleware/commonMiddleware.js
+import nextConnect from 'next-connect'
+
+const middleware = nextConnect();
+
+middleware.use(authMiddleware());
+middleware.use(corsMiddleware());
+middleware.use(boringMiddleware());
+
+export default middleware;
+```
+
+After exporting the instance of nextConnect, import it everywhere you need to reuse.
+
+```javascript
+//  api/boring.js
+import commonMiddleware from '../middleware/commonMiddleware';
+
+const handler = nextConnect();
+//  reuse the instance
+handler.use(commonMiddleware);
+
+//  extend the reused middleware
+handler.use(evenMoreBoringMiddleware());
+handler.post(responseToBoringPostRequest());
 ```
 
 ### Method routing
