@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+### Minor
+
+- Enable reusing middleware (#8)
+
 ## 0.2.0
 
 ### Minor
