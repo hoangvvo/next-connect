@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/master/graph/badge.svg)](https://codecov.io/gh/hoangvvo/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The method routing and middleware layer for [Next.js](https://nextjs.org/) API Routes.
+The method routing and middleware layer for [Next.js](https://nextjs.org/).
 
 ## Installation
 
@@ -18,7 +18,7 @@ yarn add next-connect
 
 ## Usage
 
-`next-connect` is used in **Next.js 9 [API Routes](https://nextjs.org/docs#api-routes)** (those in `/pages/api/`). The usage is similar to [Express.js](https://github.com/expressjs/express/) but without `path` as the first argument.
+The usage is similar to [Express.js](https://github.com/expressjs/express/) but without `path` as the first argument.
 
 When doing `export default`, use `handler`.
 
@@ -141,7 +141,7 @@ handler.post(responseToBoringPostRequest());
 
 Response to the HTTP request based on `METHOD`, where `METHOD` is the HTTP method (`GET`, `POST`, `PUT`, etc.) in lowercase. (ex. `handler.post`, `handler.put`, ...)
 
-`fn` is a function of `(req, res[, next])`. Such thing can be viewed as a middleware if you call `next()`. In fact, it can be considered a "conditional" middleware.
+`fn` is a function of `(req, res[, next])`.
 
 ```javascript
 //  api/publicRoute.js
@@ -150,7 +150,7 @@ handler.post(function (req, res) {
 })
 ```
 
-The function can also accept more than one argument (function), in which case it will act as a series of middleware functions.
+The function can also accept more than one argument (function), in which case it will act as a series of middleware.
 
 ```javascript
 //  api/privateRoute.js
@@ -162,8 +162,6 @@ handler.post(isAuth, function (req, res) {
     res.json(req.user);
 })
 ```
-
-The next function in the chain will be executed as long as you call `next()` in the previous one.
 
 ### 404
 
@@ -182,7 +180,7 @@ export default handler;
 
 ### Document middleware and getInitialProps
 
-To use `next-connect` in [document middleware](https://github.com/zeit/next.js/issues/7208) or `getInitialProps`, use `handler.apply(req, res)`.
+To use `next-connect` in [document middleware](https://github.com/zeit/next.js/issues/7208) or `getInitialProps`, use (`await`) `handler.apply(req, res)` instead.
 
 ```javascript
 // page/_document.js
@@ -202,6 +200,8 @@ Page.getInitialProps = async ({ req, res }) => {
   return { ...whatEverYourLittleDesires }
 }
 ```
+
+[404](#404) automatic response will not be triggered in `.apply()`
 
 ## Contributing
 

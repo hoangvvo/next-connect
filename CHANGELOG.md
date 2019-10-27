@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+### Minor
+
+- Add support for non-api pages (#11)
+
 ## 0.3.0
 
 ### Minor
