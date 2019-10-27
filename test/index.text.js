@@ -88,6 +88,17 @@ describe('nextConnect', () => {
     });
   });
 
+  context('non-api support', () => {
+    it('apply() should apply middleware to req and res', () => {
+      handler.use((req, res, next) => { req.hello = 'world'; next(); });
+      const app = createServer(async (req, res) => {
+        await handler.apply(req, res);
+        res.end(req.hello || '');
+      });
+      return request(app).get('/').expect('world');
+    });
+  });
+
   context('error handling', () => {
     it('use() with 4 args should work as an error middleware', () => {
       handler.get((req, res) => {
