@@ -180,6 +180,29 @@ export default handler;
 //  Navigating to /api/somePostRoute in the browser will render 404.
 ```
 
+### Document middleware and getInitialProps
+
+To use `next-connect` in [document middleware](https://github.com/zeit/next.js/issues/7208) or `getInitialProps`, use `handler.apply(req, res)`.
+
+```javascript
+// page/_document.js
+export async function middleware({req, res}: PageContext) {
+    const handler = nextConnect();
+    handler.use(someMiddleware());
+    // await calling .apply
+    await handler.apply(req, res);
+}
+
+// OR
+// page/somePage.js
+Page.getInitialProps = async ({ req, res }) => {
+  const handler = nextConnect();
+  handler.use(someMiddleware());
+  await handler.apply(req, res);
+  return { ...whatEverYourLittleDesires }
+}
+```
+
 ## Contributing
 
 Please see my [contributing.md](CONTRIBUTING.md).
