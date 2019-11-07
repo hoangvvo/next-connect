@@ -20,7 +20,7 @@ yarn add next-connect
 
 The usage is similar to [Express.js](https://github.com/expressjs/express/) but without `path` as the first argument.
 
-When doing `export default`, use `handler`.
+In [API Routes](https://github.com/zeit/next.js/#api-routes), when doing `export default`, use `handler`.
 
 ```javascript
 import nextConnect from 'next-connect';
@@ -48,9 +48,9 @@ export default handler;
 
 Middleware is the core of `next-connect`. Middlewares are added as layers of a "stack" where the request and response will be routed through each layer one-by-one as long as `next()` is called.
 
-`handler.use(fn)`
+`handler.use(fn[, fn ...])`
 
-`fn` is a function of `(req, res[, next])`.
+`fn`(s) are functions of `(req, res[, next])`.
 
 ```javascript
 handler.use(function (req, res, next) {
@@ -68,6 +68,9 @@ handler.use(function (req, res) {
 
 //  You can use a library too.
 handler.use(passport.initialize());
+
+//  You can chain them too
+handler.use(thisMiddleware, thatMiddleware);
 ```
 
 #### Error middleware
@@ -94,7 +97,7 @@ handler.use(function (err, req, res, next) {
 })
 ```
 
-Notice that an error middleware **must** have four arguments. In case you do not want to have the `next` argument, use `handler.error()` instead.
+Notice that an error middleware **must** have four arguments. In case you do not want to have the `next` argument, use `handler.error(fn[, fn ...])` instead.
 
 ```javascript
 //  This is still considered an error middleware
