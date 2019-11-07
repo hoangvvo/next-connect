@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+### Minor
+
+- Rewrite (Optimize codebase) and allow multiple handles in use() and error() (#13)
+
+### Patches
+
+- Update README.md (6ef206903393d37c7f34f05005ff97738695b9b3)
+
 ## 0.4.0
 
 ### Minor
