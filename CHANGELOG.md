@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1
+
+### Patches
+
+- Fix next-connect fail to work if multiple instances are used (015aa37bdd6ba9b50a97cf9d6c8eebc25f111fd0)
+
 ## 0.5.0
 
 ### Minor
