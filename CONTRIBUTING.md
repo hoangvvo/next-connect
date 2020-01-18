@@ -12,8 +12,6 @@ I welcome all contributions from the community. There are many ways to contribut
 - :children_crossing: Submit bug reports and feature requests.
 - :pencil: Improve documentation and writing examples.
 
-However, please avoid using the issue tracker for support questions. You can receive help on my [Spectrum community](https://spectrum.chat/luvbitstudio).
-
 ## How to contribute
 
 ### Bug reports
