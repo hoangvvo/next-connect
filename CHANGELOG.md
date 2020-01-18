@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.0
+
+### Major
+
+- Use Trouter (#25)
+- Add onError and onNoMatch (#26)
+
+*Breaking changes*
+
+Error middleware (`.use(err, req, res, next)` and `.error(err, req, res)`) is deprecated. Use `options.onError` instead.
+
 ## 0.5.2
 
 ### Patches
