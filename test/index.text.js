@@ -165,6 +165,16 @@ describe('nextConnect', () => {
         })
         .expect('error');
     });
+
+    it('should default to onerror', () => {
+      handler.get((req, res) => {
+        throw new Error('error');
+      });
+      const app = createServer(handler);
+      return request(app)
+        .get('/')
+        .expect(500);
+    });
   });
 
   context('init', () => {
