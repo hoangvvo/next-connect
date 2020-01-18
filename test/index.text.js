@@ -5,7 +5,7 @@ const { createServer } = require('http');
 const request = require('supertest');
 const nextConnect = require('../lib');
 
-const httpMethods = ['get', 'head', 'post', 'put', 'delete', 'options', 'trace', 'patch'];
+const METHODS = ['get', 'head', 'post', 'put', 'delete', 'options', 'trace', 'patch'];
 
 describe('nextConnect', () => {
   let handler;
@@ -14,35 +14,40 @@ describe('nextConnect', () => {
   });
 
   context('method routing', () => {
-    it('[method]() should response correctly to METHODS', () => {
-      httpMethods.forEach((method) => {
+    it('should correctly match all without base', () => {
+      METHODS.forEach((method) => {
         handler[method]((req, res) => res.end(method));
       });
       const app = createServer(handler);
       const requestPromises = [];
-      for (let i = 0; i < httpMethods.length; i += 1) {
+      METHODS.forEach((method) => {
         requestPromises.push(
-          request(app)[httpMethods[i]]('/').expect(httpMethods[i] !== 'head' ? httpMethods[i] : undefined),
+          request(app)[method](`/${method}`).expect(method !== 'head' ? method : undefined),
         );
-      }
+      });
+      return Promise.all(requestPromises);
+    });
+
+    it('should correctly match path by base', () => {
+      METHODS.forEach((method) => {
+        handler[method](`/${method}`, (req, res) => res.end(method));
+      });
+      const app = createServer(handler);
+      const requestPromises = [];
+      METHODS.forEach((method) => {
+        requestPromises.push(
+          request(app)[method](`/${method}`).expect(method !== 'head' ? method : undefined),
+        );
+      });
+      requestPromises.push(
+        request(app).get('/yes').expect(404),
+      );
       return Promise.all(requestPromises);
     });
   });
 
   context('middleware', () => {
-    it('use() should response to any method', () => {
-      handler.use((req, res) => res.end('any'));
-      const app = createServer(handler);
-      const requestPromises = [];
-      for (let i = 0; i < httpMethods.length; i += 1) {
-        requestPromises.push(
-          request(app)[httpMethods[i]]('/').expect(httpMethods[i] !== 'head' ? 'any' : undefined),
-        );
-      }
-      return Promise.all(requestPromises);
-    });
-
-    it('use() should work as middleware', () => {
+    it('use() match all without base', () => {
       handler.use((req, res, next) => {
         req.ok = 'ok';
         next();
@@ -52,8 +57,23 @@ describe('nextConnect', () => {
       });
       const app = createServer(handler);
       return request(app)
-        .get('/')
+        .get('/some/path')
         .expect('ok');
+    });
+
+    it('use() should match path by base', async () => {
+      handler.use('/this/that/', (req, res, next) => {
+        req.ok = 'ok';
+        next();
+      });
+      handler.get((req, res) => {
+        res.end(req.ok || 'no');
+      });
+      const app = createServer(handler);
+      await request(app)
+        .get('/some/path')
+        .expect('no');
+      await request(app).get('/this/that/these/those').expect('ok');
     });
 
     it('use() can reuse another instance', () => {
