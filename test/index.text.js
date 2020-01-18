@@ -111,7 +111,7 @@ describe('nextConnect', () => {
   context('non-api support', () => {
     it('apply() should apply middleware to req and res', () => {
       handler.use((req, res, next) => { req.hello = 'world'; next(); });
-      const app = createServer(async (req, res) => {
+      const app = createServer(async (req, res, next) => {
         await handler.apply(req, res);
         res.end(req.hello || '');
       });
@@ -167,7 +167,7 @@ describe('nextConnect', () => {
     });
   });
 
-  context('miscellaneous', () => {
+  context('init', () => {
     it('nextConnnet() should return a function with two argument', () => {
       assert(typeof nextConnect() === 'function' && nextConnect().length === 2);
     });
@@ -175,11 +175,7 @@ describe('nextConnect', () => {
     it('should return when run out of layer', () => {
       handler.get(
         (req, res, next) => {
-          next();
-        },
-        (req, res, next) => {
           res.end('ok');
-          // should exit after this not to throw
           next();
         },
       );
@@ -190,7 +186,7 @@ describe('nextConnect', () => {
         .expect('ok');
     });
 
-    it('should 404 if header not sent after stack ended', () => {
+    it('404 if headers not sent', () => {
       handler.post((req, res) => {
         res.end('hmm');
       });
@@ -199,6 +195,18 @@ describe('nextConnect', () => {
       return request(app)
         .get('/')
         .expect(404);
+    });
+
+    it('custom 404 if headers not sent', () => {
+      function onNoMatch(req, res) {
+        res.end('no page found... or is it');
+      }
+
+      const handler2 = nextConnect({ onNoMatch });
+      const app = createServer(handler2);
+      return request(app)
+        .get('/')
+        .expect(200);
     });
   });
 });
