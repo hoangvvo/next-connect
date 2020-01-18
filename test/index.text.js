@@ -89,26 +89,9 @@ describe('nextConnect', () => {
       const app = createServer(handler);
       return request(app).get('/').expect('world');
     });
-
-    it('[method]() should be chainable', () => {
-      handler.get(
-        (req, res, next) => {
-          res.setHeader('x-ok', 'yes');
-          next();
-        },
-        (req, res) => {
-          res.end('ok');
-        },
-      );
-      const app = createServer(handler);
-      return request(app)
-        .get('/')
-        .expect('x-ok', 'yes')
-        .expect('ok');
-    });
   });
 
-  context('non-api support', () => {
+  context('apply()', () => {
     it('apply() should apply middleware to req and res', () => {
       handler.use((req, res, next) => { req.hello = 'world'; next(); });
       const app = createServer(async (req, res, next) => {
@@ -119,70 +102,46 @@ describe('nextConnect', () => {
     });
   });
 
-  context('error handling', () => {
-    it('use() with 4 args should work as an error middleware', () => {
-      handler.get((req, res) => {
-        throw new Error('error');
-      });
-      handler.use((err, req, res, next) => {
-        res.end(err.message);
-      });
-      const app = createServer(handler);
-      return request(app)
-        .get('/')
-        .expect('error');
-    });
-
-    it('error() should work as an error middleware', () => {
-      handler.get((req, res) => {
-        throw new Error('error');
-      });
-      handler.error((err, req, res) => {
-        res.end(err.message);
-      });
-      const app = createServer(handler);
-      return request(app)
-        .get('/')
-        .expect('error');
-    });
-
-    it('should bypass other handler if error thrown', () => {
-      handler.get((req, res) => {
-        throw new Error('error');
-      });
-      handler.use((req, res) => {
-        res.setHeader('x-ok', 'yes');
-        res.end('ok');
-      });
-      handler.error((err, req, res) => {
-        res.end(err.message);
-      });
-      const app = createServer(handler);
-      return request(app)
-        .get('/')
-        .expect((res) => {
-          assert(res.header['x-ok'] !== 'yes');
-        })
-        .expect('error');
-    });
-
+  context('onError', () => {
     it('should default to onerror', () => {
-      handler.get((req, res) => {
-        throw new Error('error');
-      });
+      handler
+        .get((req, res) => {
+          throw new Error('error');
+        });
+
       const app = createServer(handler);
       return request(app)
         .get('/')
         .expect(500);
     });
+    it('should use custom onError', async () => {
+      function onError(err, req, res, next) {
+        res.end('One does not simply ignore error');
+      }
+      const handler2 = nextConnect({ onError });
+      handler2.get((req, res, next) => { next(Error()); });
+      const app = createServer(handler2);
+      await request(app).get('/').expect(200);
+    });
+    it('should continue chain with next', () => {
+      function onError(err, req, res, next) {
+        next();
+      }
+      const handler2 = nextConnect({ onError });
+      handler2
+        .get((req, res, next) => { next(Error()); })
+        .get((req, res) => res.end('no error'));
+      const app = createServer(handler2);
+      return request(app).get('/').expect('no error');
+    });
   });
 
-  context('init', () => {
+  context('misc', () => {
     it('nextConnnet() should return a function with two argument', () => {
       assert(typeof nextConnect() === 'function' && nextConnect().length === 2);
     });
 
-    it('should return when run out of layer', () => {
+    it('should return if no more routes available', () => {
       handler.get(
         (req, res, next) => {
           res.end('ok');
@@ -196,9 +155,9 @@ describe('nextConnect', () => {
         .expect('ok');
     });
 
-    it('404 if headers not sent', () => {
+    it('should response default 404 if no response', () => {
       handler.post((req, res) => {
-        res.end('hmm');
+        res.end('');
       });
 
       const app = createServer(handler);
@@ -207,9 +166,9 @@ describe('nextConnect', () => {
         .expect(404);
     });
 
-    it('custom 404 if headers not sent', () => {
+    it('should response custom 404 if no response', () => {
       function onNoMatch(req, res) {
-        res.end('no page found... or is it');
+        res.end('');
       }
 
       const handler2 = nextConnect({ onNoMatch });
@@ -217,6 +176,26 @@ describe('nextConnect', () => {
       return request(app)
         .get('/')
         .expect(200);
+    });
+
+    it('should be chainable', () => {
+      handler
+        .use((req, res, next) => {
+          req.four = '4';
+          next();
+        }, (req, res, next) => {
+          res.setHeader('2-plus-2-is', req.four);
+          next();
+        })
+        .get((req, res) => {
+          // minus 3 is 1
+          res.end('quick math');
+        });
+      const app = createServer(handler);
+      return request(app)
+        .get('/')
+        .expect('2-plus-2-is', '4')
+        .expect('quick math');
     });
   });
 });
