@@ -43,6 +43,47 @@ The API is similar to [Express.js](https://github.com/expressjs/express) with a 
 
 Initialize an instance of `next-connect`.
 
+#### options.onError
+
+Accepts a function as a catch-all error handler; executed whenever a middleware throws an error.
+By default, it responses with status code `500` and error message if any.
+
+```javascript
+function onError(err, req, res, next) {
+  logger.log(err);
+
+  res.status(500).end(err.toString());
+  // OR: you may want to continue
+  next()
+}
+
+const handler = nextConnect({ onError });
+
+handler
+  .use((req, res, next) => {
+    throw new Error('oh no!');
+    // or use next
+    next(Error('oh no'));
+  })
+  .use((req, res) => {
+    // this will run if next() is called in onError
+    res.end('error no more');
+  });
+```
+
+#### options.onNoMatch
+
+Accepts a function of `(req, res)` as a handler when no route is matched.
+By default, it responses with `404` status and `not found` body.
+
+```javascript
+function onNoMatch(req, res) {
+  res.status(404).end('page is not found... or is it')
+}
+
+const handler = nextConnect({ onNoMatch });
+```
+
 ### use(base, ...fn)
 
 `base` (optional) - match all route to the right of `base`.
@@ -67,30 +108,7 @@ handler.use(passport.initialize());
 
 #### Error middleware
 
-Error middlewares will be called when an error is thrown. `fn`(s) must be `(err, req, res, next)` (or use `.error(err, req, res)`).
-
-```javascript
-handler.use((req, res, next) => {
-  throw new Error('oh no!');
-  // or use next
-  next(Error('oh no'));
-});
-
-handler.use((err, req, res, next) => {
-  res.status(500).end(`error: ${err}`);
-  //  Pass along the error to another error handler
-  next(err);
-});
-
-handler.use((err, req, res, next) => {
-  logger.log(err);
-});
-
-// OR if you do not want `next`
-handler.error((err, res, res) => {
-  logger.log(err);
-});
-```
+**Deprecated: Use `options.onError` instead.**
 
 ### METHOD(pattern, ...fns)
 
@@ -112,7 +130,7 @@ handler.put('/user/:id', (req, res, next) => {
 
 ### .apply(req, res)
 
-This is used in [document middleware](https://github.com/zeit/next.js/issues/7208) or `getInitialProps`. It returns a promise after which you can use the upgraded `req` and `res`.
+This is used in [document middleware](https://github.com/zeit/next.js/issues/7208) or `getInitialProps`. It returns a promise after which you can use the upgraded `req` and `res`. The last middleware must call `next()`.
 
 ```javascript
 // page/_document.js
@@ -126,12 +144,6 @@ Page.getInitialProps = async ({ req, res }) => {
   return { ...whatEverYourLittleDesires };
 };
 ```
-
-## Miscellaneous
-
-### 404
-
-If no response is sent, `next-connect` will response with 404. Not triggered in `.apply()`
 
 ## Contributing
 
