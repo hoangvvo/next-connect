@@ -19,6 +19,7 @@ yarn add next-connect
 ## Usage
 
 ```javascript
+// pages/api/index.js
 import nextConnect from "next-connect";
 
 const handler = nextConnect();
@@ -29,11 +30,15 @@ handler
     res.send("Hello world");
   })
   .post((req, res) => {
-    res.json("Hi there");
+    res.json({ hello: 'world' });
   });
 
 export default handler;
 ```
+
+For usage in pages, see [`.apply`](#applyreq-res).
+
+See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more)
 
 ## API
 
@@ -86,7 +91,7 @@ const handler = nextConnect({ onNoMatch });
 
 ### use(base, ...fn)
 
-`base` (optional) - match all route to the right of `base`.
+`base` (optional) - match all route to the right of `base` or match all if not provided.
 `fn`(s) are functions of `(req, res[, next])`
 
 `fn` can also be an instance of `next-connect`, where it will act as a sub application.
@@ -106,14 +111,10 @@ handler.use(anotherHandler);
 handler.use(passport.initialize());
 ```
 
-#### Error middleware
-
-**Deprecated: Use `options.onError` instead.**
-
 ### METHOD(pattern, ...fns)
 
 `pattern` (optional) - match all route based on [supported](https://github.com/lukeed/trouter#pattern) pattern or match all if not provided.
-`fn`(s) are functions of `(req, res[, next])`.
+`fn`(s) are functions of `(req, res[, next])`. This is ideal to be used in API Routes.
 
 ```javascript
 handler.get('/user', (req, res, next) => {
@@ -130,18 +131,18 @@ handler.put('/user/:id', (req, res, next) => {
 
 ### .apply(req, res)
 
-This is used in [document middleware](https://github.com/zeit/next.js/issues/7208) or `getInitialProps`. It returns a promise after which you can use the upgraded `req` and `res`. The last middleware must call `next()`.
+Applies the middleware and returns a promise after which you can use the upgraded `req` and `res`. The last middleware must call `next()`.
+
+This can be use for [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
 
 ```javascript
-// page/_document.js
-export async function middleware({ req, res }: PageContext) {
+// page/index.js
+export async function getServerSideProps({ req, res }) {
   await handler.apply(req, res);
-}
-// OR
-// page/somePage.js
-Page.getInitialProps = async ({ req, res }) => {
-  await handler.apply(req, res);
-  return { ...whatEverYourLittleDesires };
+  // do something with the upgraded req and res
+  return {
+    props: { ...yourProps }, // will be passed to the page component as props
+  }
 };
 ```
 
