@@ -100,6 +100,20 @@ describe('nextConnect', () => {
       });
       return request(app).get('/').expect('world');
     });
+    it('should reject if there is an error', () => {
+      handler.use(() => {
+        throw new Error('error');
+      });
+      const app = createServer(async (req, res, next) => {
+        try {
+          await handler.apply(req, res);
+          res.end('good');
+        } catch (e) {
+          res.end(e.toString());
+        }
+      });
+      return request(app).get('/').expect('Error: error');
+    });
   });
 
   context('onError', () => {
@@ -196,6 +210,11 @@ describe('nextConnect', () => {
         .get('/')
         .expect('2-plus-2-is', '4')
         .expect('quick math');
+    });
+
+    it('should return a promise', () => {
+      handler.use((req, res) => null);
+      handler({}, { end: () => null }).then((e) => { /* no-op */ });
     });
   });
 });
