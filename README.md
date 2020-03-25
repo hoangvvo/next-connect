@@ -18,6 +18,8 @@ yarn add next-connect
 
 ## Usage
 
+`next-connect` is often used in [API Routes](https://nextjs.org/docs/api-routes/introduction):
+
 ```javascript
 // pages/api/index.js
 import nextConnect from "next-connect";
@@ -36,13 +38,13 @@ handler
 export default handler;
 ```
 
-For usage in pages, see [`.apply`](#applyreq-res).
+For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.apply`](#applyreq-res).
 
 See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more)
 
 ## API
 
-The API is similar to [Express.js](https://github.com/expressjs/express) with a few additions.
+The API is similar to [Express.js](https://github.com/expressjs/express) with several differences.
 
 ### nextConnect(options)
 
@@ -89,34 +91,35 @@ function onNoMatch(req, res) {
 const handler = nextConnect({ onNoMatch });
 ```
 
-### use(base, ...fn)
+### .use(base, ...fn)
 
-`base` (optional) - match all route to the right of `base` or match all if not provided.
-`fn`(s) are functions of `(req, res[, next])`
-
-`fn` can also be an instance of `next-connect`, where it will act as a sub application.
+`base` (optional) - match all route to the right of `base` or match all if omitted.
+`fn`(s) are functions of `(req, res[, next])` **or** an instance of `next-connect`, where it will act as a sub application.
 
 ```javascript
 handler.use((req, res, next) => {
   req.hello = 'world';
-  // call next if you want to proceed to next chain
+  // call next if you want to proceed to next in chain
   next();
 });
 
 // Reuse an instance of nextConnect
-const anotherHandler = nextConnect().use(thisFn).use(thatFn);
+const anotherHandler = nextConnect()
+anotherHandler.use(commonFn).use(anotherFn);
 handler.use(anotherHandler);
 
 // You can use a library too.
 handler.use(passport.initialize());
 ```
 
-### METHOD(pattern, ...fns)
+### .METHOD(pattern, ...fns)
 
-`pattern` (optional) - match all route based on [supported](https://github.com/lukeed/trouter#pattern) pattern or match all if not provided.
+`METHOD` is a HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
+`pattern` (optional) - match all route based on [supported](https://github.com/lukeed/trouter#pattern) pattern or match all if omitted.
 `fn`(s) are functions of `(req, res[, next])`. This is ideal to be used in API Routes.
 
 ```javascript
+handler.use('/user', passport.initialize());
 handler.get('/user', (req, res, next) => {
   res.json(req.user);
 });
@@ -127,21 +130,32 @@ handler.put('/user/:id', (req, res, next) => {
   // https://nextjs.org/docs/routing/dynamic-routes
   res.end(`User ${req.query.id} updated`);
 });
+handler.get((req, res, next) => {
+  res.end('This matchs whatever route')
+})
 ```
+
+However, since Next.js already handles routing (including dynamic routes), we often omit `pattern` in `.METHOD`.
 
 ### .apply(req, res)
 
-Applies the middleware and returns a promise after which you can use the upgraded `req` and `res`. The last middleware must call `next()`.
+Applies the middleware and returns a **promise** after which you can use the upgraded `req` and `res`.
 
-This can be use for [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
+This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
 
 ```javascript
 // page/index.js
 export async function getServerSideProps({ req, res }) {
-  await handler.apply(req, res);
+  const handler = nextConnect();
+  handler.use(passport.initialize());
+  try {
+    await handler.apply(req, res);
+  } catch(e) {
+    // handle the error
+  }
   // do something with the upgraded req and res
   return {
-    props: { ...yourProps }, // will be passed to the page component as props
+    props: { user: req.user }, // will be passed to the page component as props
   }
 };
 ```
