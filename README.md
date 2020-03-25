@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/master/graph/badge.svg)](https://codecov.io/gh/hoangvvo/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The method routing and middleware layer for [Next.js](https://nextjs.org/). Powered by [trouter](https://github.com/lukeed/trouter).
+The method routing and middleware layer for [Next.js](https://nextjs.org/) (also works in [micro](https://github.com/zeit/micro) or [Node.js HTTP Server](https://nodejs.org/api/http.html)). Powered by [trouter](https://github.com/lukeed/trouter).
 
 ## Installation
 
@@ -158,6 +158,44 @@ export async function getServerSideProps({ req, res }) {
     props: { user: req.user }, // will be passed to the page component as props
   }
 };
+```
+
+## Using in other frameworks
+
+`next-connect` supports any frameworks that has the signature of `(req, res)`.
+
+### [Micro](https://github.com/zeit/micro)
+
+```javascript
+const {send} = require('micro')
+const handler = require('next-connect')()
+
+handler
+  .use(someMiddleware())
+  .get(() => 'hello world')
+  .post((req, res) => {
+    send(res, 200, { hello: 'world' })
+  });
+
+module.exports = handler;
+```
+
+### Node.js HTTP Server
+
+```javascript
+const handler = require('next-connect')()
+const http = require('http');
+
+handler
+  .use(someMiddleware())
+  .get((req, res) => {
+    res.send("Hello world");
+  })
+  .post((req, res) => {
+    res.json({ hello: 'world' });
+  });
+
+http.createServer(handler).listen(PORT);
 ```
 
 ## Contributing
