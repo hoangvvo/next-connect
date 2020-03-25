@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1
+
+### Patches
+
+- Fix "API resolved without sending a response"
+- Handle error properly in .apply
+
 ## 0.6.0
 
 ### Major
