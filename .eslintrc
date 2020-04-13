@@ -1,9 +1,17 @@
 {
     "env": {
-        "mocha": true
+        "commonjs": true,
+        "es6": true,
+        "node": true
     },
-    "extends": "airbnb-base",
+    "extends": "eslint:recommended",
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018
+    },
     "rules": {
-        "no-underscore-dangle": ["error", { "allow": ["_stack", "_layer", "_idx", "_next"] }]
     }
 }
