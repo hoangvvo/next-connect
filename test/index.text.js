@@ -148,6 +148,18 @@ describe('nextConnect', () => {
       const app = createServer(handler2);
       return request(app).get('/').expect('no error');
     });
+    it('should catch async function errors', () => {
+      function onError(err, req, res, next) {
+        res.end(err.message);
+      }
+      const handler2 = nextConnect({ onError });
+      handler2.use(async (req, res) => {
+        throw new Error('Something failed');
+      });
+      handler2.get(async (req, res) => res.end('ok'));
+      const app = createServer(handler2);
+      return request(app).get('/').expect('Something failed');
+    });
   });
 
   context('misc', () => {
