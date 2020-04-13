@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.3
+
+### Patches
+
+- Refactor for performance (#42)
+
+## 0.6.2
+
+### Patches
+
+- Fix catching async function error
+
 ## 0.6.1
 
 ### Patches
