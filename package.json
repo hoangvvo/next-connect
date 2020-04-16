@@ -18,8 +18,16 @@
     "test": "nyc mocha",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov"
   },
-  "repository": "git@github.com:hoangvvo/next-connect.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoangvvo/next-connect.git"
+  },
   "author": "Hoang Vo (https://www.hoangvvo.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hoangvvo/next-connect/issues"
+  },
+  "homepage": "https://github.com/hoangvvo/next-connect#readme",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^6.8.0",
