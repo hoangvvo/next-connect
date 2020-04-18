@@ -1,20 +1,20 @@
 declare module 'next-connect' {
   import { IncomingMessage, ServerResponse } from 'http'
 
-  export type NextHandler = (err?: any) => void;
-  export type Middleware = NextConnect | RequestHandler;
+  type NextHandler = (err?: any) => void;
+  type Middleware = NextConnect | RequestHandler;
 
-  export type RequestHandler = (req: IncomingMessage, res: ServerResponse, next?: NextHandler) => void;
-	export type ErrorHandler = (err: any, req: IncomingMessage, res: ServerResponse, next: NextHandler) => void;
+  type RequestHandler = (req: IncomingMessage, res: ServerResponse, next?: NextHandler) => void;
+	type ErrorHandler = (err: any, req: IncomingMessage, res: ServerResponse, next: NextHandler) => void;
 
-  export interface Options {
+  interface Options {
     onError?: ErrorHandler;
 		onNoMatch?: RequestHandler;
   }
 
-  export type NextConnectHanlder = (req: IncomingMessage, res: ServerResponse) => Promise<void>
+  function NextConnect (req: IncomingMessage, res: ServerResponse): Promise<void>
 
-  interface NextConnect extends NextConnectHanlder {
+  interface NextConnect {
     readonly onError: ErrorHandler
     readonly onNoMatch: RequestHandler
 
@@ -50,5 +50,5 @@ declare module 'next-connect' {
     handle(req: IncomingMessage, res: ServerResponse, done: NextHandler): void
   }
 
-  export default NextConnect
+  export default function (options?: Options): NextConnect
 }
