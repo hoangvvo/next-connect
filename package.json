@@ -10,6 +10,7 @@
     "connect"
   ],
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib/"
   ],
@@ -23,7 +24,6 @@
     "url": "git+https://github.com/hoangvvo/next-connect.git"
   },
   "author": "Hoang Vo (https://www.hoangvvo.com)",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/hoangvvo/next-connect/issues"
   },
