@@ -50,5 +50,5 @@ declare module 'next-connect' {
     handle(req: IncomingMessage, res: ServerResponse, done: NextHandler): void
   }
 
-  export default function (options?: Options): NextConnect
+  export default NextConnect
 }
