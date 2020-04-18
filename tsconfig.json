@@ -1,0 +1,8 @@
+{
+  "module": "commonjs",
+  "lib": ["es6"],
+  "noImplicitAny": true,
+  "noImplicitThis": true,
+  "strictNullChecks": true,
+  "strictFunctionTypes": true
+}
