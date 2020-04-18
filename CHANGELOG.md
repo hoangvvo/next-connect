@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.4
+
+### Patches
+
+- Add TypeScript definition (#44)
+
 ## 0.6.3
 
 ### Patches
