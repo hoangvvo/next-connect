@@ -1,26 +1,38 @@
-declare module 'next-connect' {
-  import http from 'http'
-  import { NextApiRequest, NextApiResponse } from 'next'
+declare module "next-connect" {
+  import { NextApiRequest, NextApiResponse } from "next";
 
-  type IncomingMessage = http.IncomingMessage & NextApiRequest;
-  type ServerResponse = http.ServerResponse & NextApiResponse;
+  type IncomingMessage = NextApiRequest;
+  type ServerResponse = NextApiResponse;
 
   type NextHandler = (err?: any) => void;
   type Middleware = NextConnect | RequestHandler;
 
-  type RequestHandler = (req: IncomingMessage, res: ServerResponse, next: NextHandler) => void;
-	type ErrorHandler = (err: any, req: IncomingMessage, res: ServerResponse, next: NextHandler) => void;
+  type RequestHandler = (
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: NextHandler
+  ) => void;
+
+  type ErrorHandler = (
+    err: any,
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: NextHandler
+  ) => void;
 
   interface Options {
     onError?: ErrorHandler;
-		onNoMatch?: RequestHandler;
+    onNoMatch?: RequestHandler;
   }
 
-  function NextConnect (req: IncomingMessage, res: ServerResponse): Promise<void>
+  function NextConnect(
+    req: IncomingMessage,
+    res: ServerResponse
+  ): Promise<void>;
 
   interface NextConnect {
-    readonly onError: ErrorHandler
-    readonly onNoMatch: RequestHandler
+    readonly onError: ErrorHandler;
+    readonly onNoMatch: RequestHandler;
 
     use(...handlers: Middleware[]): this;
     use(pattern: string | RegExp, ...handlers: Middleware[]): this;
@@ -49,10 +61,10 @@ declare module 'next-connect' {
     patch(...handlers: RequestHandler[]): this;
     patch(pattern: string | RegExp, ...handlers: RequestHandler[]): this;
 
-    apply(req: IncomingMessage, res: ServerResponse): Promise<void>
+    apply(req: IncomingMessage, res: ServerResponse): Promise<void>;
 
-    handle(req: IncomingMessage, res: ServerResponse, done: NextHandler): void
+    handle(req: IncomingMessage, res: ServerResponse, done: NextHandler): void;
   }
 
-  export default function (options?: Options): NextConnect
+  export default function (options?: Options): NextConnect;
 }
