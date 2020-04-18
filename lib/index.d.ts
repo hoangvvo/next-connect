@@ -8,7 +8,7 @@ declare module 'next-connect' {
   type NextHandler = (err?: any) => void;
   type Middleware = NextConnect | RequestHandler;
 
-  type RequestHandler = (req: IncomingMessage, res: ServerResponse, next?: NextHandler) => void;
+  type RequestHandler = (req: IncomingMessage, res: ServerResponse, next: NextHandler) => void;
 	type ErrorHandler = (err: any, req: IncomingMessage, res: ServerResponse, next: NextHandler) => void;
 
   interface Options {
