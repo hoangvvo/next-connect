@@ -126,16 +126,17 @@ describe('nextConnect', () => {
       const app = createServer(handler);
       return request(app)
         .get('/')
-        .expect(500);
+        .expect(500)
+        .expect('error')
     });
     it('should use custom onError', async () => {
       function onError(err, req, res, next) {
         res.end('One does not simply ignore error');
       }
       const handler2 = nextConnect({ onError });
-      handler2.get((req, res, next) => { next(Error()); });
+      handler2.get((req, res, next) => { throw new Error('wackk'); });
       const app = createServer(handler2);
-      await request(app).get('/').expect(200);
+      await request(app).get('/').expect(200).expect('One does not simply ignore error');
     });
     it('should continue chain with next', () => {
       function onError(err, req, res, next) {
@@ -143,7 +144,7 @@ describe('nextConnect', () => {
       }
       const handler2 = nextConnect({ onError });
       handler2
-        .get((req, res, next) => { next(Error()); })
+        .get((req, res, next) => { throw new Error() })
         .get((req, res) => res.end('no error'));
       const app = createServer(handler2);
       return request(app).get('/').expect('no error');
