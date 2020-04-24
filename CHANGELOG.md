@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.5
+
+### Patches
+
+- Fix uncaught error in non-async functions (#45)
+
 ## 0.6.4
 
 ### Patches
