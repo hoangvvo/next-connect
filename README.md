@@ -33,6 +33,9 @@ handler
   })
   .post((req, res) => {
     res.json({ hello: 'world' });
+  })
+  .put(async (req, res) => {
+    res.end('async/await is also supported!');
   });
 
 export default handler;
@@ -189,10 +192,11 @@ const http = require('http');
 handler
   .use(someMiddleware())
   .get((req, res) => {
-    res.send("Hello world");
+    res.end('Hello world');
   })
   .post((req, res) => {
-    res.json({ hello: 'world' });
+    res.setHeader('content-type', 'application/json');
+    res.end(JSON.stringify({ hello: 'world' }));
   });
 
 http.createServer(handler).listen(PORT);
