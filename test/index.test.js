@@ -102,17 +102,17 @@ describe('nextConnect', () => {
     });
     it('should reject if there is an error', () => {
       handler.use(() => {
-        throw new Error('error');
+        throw new Error('error :(');
       });
       const app = createServer(async (req, res, next) => {
         try {
           await handler.apply(req, res);
           res.end('good');
         } catch (e) {
-          res.end(e.toString());
+          res.end(e.message);
         }
       });
-      return request(app).get('/').expect('Error: error');
+      return request(app).get('/').expect('error :(');
     });
   });
 
@@ -134,6 +134,7 @@ describe('nextConnect', () => {
         res.end('One does not simply ignore error');
       }
       const handler2 = nextConnect({ onError });
+      handler2.use((req, res, next) => { next() })
       handler2.get((req, res, next) => { throw new Error('wackk'); });
       const app = createServer(handler2);
       await request(app).get('/').expect(200).expect('One does not simply ignore error');
@@ -144,6 +145,7 @@ describe('nextConnect', () => {
       }
       const handler2 = nextConnect({ onError });
       handler2
+        .get((req,res, next) => next())
         .get((req, res, next) => { throw new Error() })
         .get((req, res) => res.end('no error'));
       const app = createServer(handler2);
@@ -154,6 +156,9 @@ describe('nextConnect', () => {
         res.end(err.message);
       }
       const handler2 = nextConnect({ onError });
+      handler2.use((req, res, next) => {
+        next()
+      })
       handler2.use(async (req, res) => {
         throw new Error('Something failed');
       });
