@@ -109,10 +109,10 @@ describe('nextConnect', () => {
           await handler.apply(req, res);
           res.end('good');
         } catch (e) {
-          res.end(e.message);
+          res.end(e.toString());
         }
       });
-      return request(app).get('/').expect('error :(');
+      return request(app).get('/').expect('Error: error :(');
     });
   });
 
