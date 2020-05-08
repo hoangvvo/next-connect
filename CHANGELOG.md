@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.6
+
+### Patches
+
+- Fix uncaught error in async middleware (#50)
+
 ## 0.6.5
 
 ### Patches
