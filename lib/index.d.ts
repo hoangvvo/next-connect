@@ -35,7 +35,6 @@ declare module "next-connect" {
     readonly onError: ErrorHandler;
     readonly onNoMatch: RequestHandler;
 
-    // no generic here as by my understanding it's not inferrable
     use<T = {}, S = {}>(...handlers: Middleware<T, S>[]): this;
     use<T = {}, S = {}>(pattern: string | RegExp, ...handlers: Middleware<T, S>[]): this;
 
