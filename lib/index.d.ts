@@ -36,32 +36,32 @@ declare module "next-connect" {
     readonly onNoMatch: RequestHandler;
 
     // no generic here as by my understanding it's not inferrable
-    use(...handlers: Middleware[]): this;
-    use<T, S>(pattern: string | RegExp, ...handlers: Middleware<T, S>[]): this;
+    use<T = {}, S = {}>(...handlers: Middleware<T, S>[]): this;
+    use<T = {}, S = {}>(pattern: string | RegExp, ...handlers: Middleware<T, S>[]): this;
 
-    get<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    get<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    get<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    get<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    head<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    head<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    head<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    head<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    post<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    post<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    post<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    post<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    put<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    put<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    put<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    put<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    delete<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    delete<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    delete<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    delete<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    options<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    options<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    options<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    options<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    trace<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    trace<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    trace<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    trace<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
-    patch<T, S>(...handlers: RequestHandler<T, S>[]): this;
-    patch<T, S>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
+    patch<T = {}, S = {}>(...handlers: RequestHandler<T, S>[]): this;
+    patch<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<T, S>[]): this;
 
     apply(req: IncomingMessage, res: ServerResponse): Promise<void>;
 
