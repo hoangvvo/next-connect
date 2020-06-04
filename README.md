@@ -22,20 +22,21 @@ yarn add next-connect
 
 ```javascript
 // pages/api/index.js
-import nextConnect from "next-connect";
+import nc from 'next-connect';
 
-const handler = nextConnect();
-
-handler
+const handler = nc()
   .use(someMiddleware())
   .get((req, res) => {
-    res.send("Hello world");
+    res.send('Hello world');
   })
   .post((req, res) => {
     res.json({ hello: 'world' });
   })
   .put(async (req, res) => {
     res.end('async/await is also supported!');
+  })
+  .patch(async (req, res) => {
+    throw new Error('Throws me around! Error can be caught and handled.')
   });
 
 export default handler;
@@ -47,9 +48,12 @@ See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongod
 
 ## API
 
-The API is similar to [Express.js](https://github.com/expressjs/express) with several differences.
+The API is similar to [Express.js](https://github.com/expressjs/express) with several differences:
 
-### nextConnect(options)
+- It does not include any [helper methods](http://expressjs.com/en/4x/api.html#res.append) or template engine (you can incorporate them using middleware)
+- It does not suppoprt error-handling middleware pattern. Use `options.onError` instead.
+
+### nc(options)
 
 Initialize an instance of `next-connect`.
 
@@ -67,7 +71,7 @@ function onError(err, req, res, next) {
   next()
 }
 
-const handler = nextConnect({ onError });
+const handler = nc({ onError });
 
 handler
   .use((req, res, next) => {
@@ -91,7 +95,7 @@ function onNoMatch(req, res) {
   res.status(404).end('page is not found... or is it')
 }
 
-const handler = nextConnect({ onNoMatch });
+const handler = nc({ onNoMatch });
 ```
 
 ### .use(base, ...fn)
@@ -100,16 +104,22 @@ const handler = nextConnect({ onNoMatch });
 `fn`(s) are functions of `(req, res[, next])` **or** an instance of `next-connect`, where it will act as a sub application.
 
 ```javascript
+// Mount a middleware function
 handler.use((req, res, next) => {
   req.hello = 'world';
   // call next if you want to proceed to next in chain
   next();
 });
 
-// Reuse an instance of nextConnect
-const anotherHandler = nextConnect()
-anotherHandler.use(commonFn).use(anotherFn);
-handler.use(anotherHandler);
+// Or include a base
+handler.use('/foo', fn); // Only run in /foo/**
+
+// Mount an instance of next-connect
+const subapp1 = nc().use('/baz', fnUSE).post('/qux', fnPOST);
+const subapp2 = nc().get('/bar', fnGET);
+handler
+  .use(subapp1);
+  .use('/foo', subapp2); // Sub app or "Router" pattern: fnGET runs on /foo/bar, not /foo or /bar
 
 // You can use a library too.
 handler.use(passport.initialize());
@@ -148,9 +158,11 @@ This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-featu
 
 ```javascript
 // page/index.js
+const handler = nc();
+handler.use(passport.initialize());
+handler.post(postMiddleware);
+
 export async function getServerSideProps({ req, res }) {
-  const handler = nextConnect();
-  handler.use(passport.initialize());
   try {
     await handler.apply(req, res);
   } catch(e) {
