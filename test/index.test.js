@@ -76,7 +76,7 @@ describe('nextConnect', () => {
       await request(app).get('/this/that/these/those').expect('ok');
     });
 
-    it('use() can reuse another instance', () => {
+    it('use() can mount another instance', () => {
       const handler2 = nextConnect();
       handler2.use((req, res, next) => {
         req.hello = 'world';
@@ -89,6 +89,17 @@ describe('nextConnect', () => {
       const app = createServer(handler);
       return request(app).get('/').expect('world');
     });
+
+    it('use() can mount another instance with base', async () => {
+      const handler2 = nextConnect();
+      handler2.get('/foo', (req, res) => {
+        res.end('ok');
+      })
+      handler.use('/sub', handler2);
+      const app = createServer(handler);
+      await request(app).get('/sub/foo').expect('ok');
+      await request(app).get('/foo').expect(404);
+    })
   });
 
   context('apply()', () => {
