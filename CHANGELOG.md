@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+- Call trouter#find with pathname (#62)
+
 ## 0.7.0
 
 - feat: add support for handler generics (#57)
