@@ -3,18 +3,13 @@ const assert = require('assert');
 //  Next.js API Routes behaves similar to Node HTTP Server
 const { createServer } = require('http');
 const request = require('supertest');
-const nextConnect = require('../lib');
+const nc = require('../lib');
 
 const METHODS = ['get', 'head', 'post', 'put', 'delete', 'options', 'trace', 'patch'];
 
-let handler;
-beforeEach(() => {
-  handler = nextConnect();
-});
-
 describe('nc()', () => {
   it('is chainable', () => {
-    handler
+    const handler = nc()
       .use(
         (req, res, next) => {
           req.four = '4';
@@ -37,11 +32,11 @@ describe('nc()', () => {
   });
 
   it('is a function with two argument', () => {
-    assert(typeof nextConnect() === 'function' && nextConnect().length === 2);
+    assert(typeof nc() === 'function' && nc().length === 2);
   });
 
   it('returns a promise', () => {
-    handler({}, { end: () => null }).then((e) => {
+    nc()({}, { end: () => null }).then((e) => {
       /* no-op */
     });
   });
@@ -49,6 +44,7 @@ describe('nc()', () => {
 
 describe('.METHOD', () => {
   it('match all without path', () => {
+    const handler = nc()
     METHODS.forEach((method) => {
       handler[method]((req, res) => res.end(method));
     });
@@ -63,6 +59,7 @@ describe('.METHOD', () => {
   });
 
   it('match by path', () => {
+    const handler = nc()
     METHODS.forEach((method) => {
       handler[method](`/${method}`, (req, res) => res.end(method));
     });
@@ -80,6 +77,7 @@ describe('.METHOD', () => {
 
 describe('use()', () => {
   it('match all without base', async () => {
+    const handler = nc()
     handler.use((req, res, next) => {
       req.ok = 'ok';
       next();
@@ -93,6 +91,7 @@ describe('use()', () => {
   });
 
   it('match path by base', async () => {
+    const handler = nc()
     handler.use('/this/that/', (req, res, next) => {
       req.ok = 'ok';
       next();
@@ -106,12 +105,13 @@ describe('use()', () => {
   });
 
   it('mount subapp', () => {
-    const handler2 = nextConnect();
+    const handler2 = nc();
     handler2.use((req, res, next) => {
       req.hello = 'world';
       next();
     });
 
+    const handler = nc()
     handler.use(handler2);
     handler.use((req, res) => res.end(req.hello));
 
@@ -120,10 +120,11 @@ describe('use()', () => {
   });
 
   it('mount subapp with base', async () => {
-    const handler2 = nextConnect();
+    const handler2 = nc();
     handler2.get('/foo', (req, res) => {
       res.end('ok');
     });
+    const handler = nc()
     handler.use('/sub', handler2);
     const app = createServer(handler);
     await request(app).get('/sub/foo').expect('ok');
@@ -134,6 +135,7 @@ describe('use()', () => {
 
 describe('handle()', () => {
   it('response with default 404 on no match', () => {
+    const handler = nc()
     handler.post((req, res) => {
       res.end('');
     });
@@ -147,14 +149,21 @@ describe('handle()', () => {
       res.end('');
     }
 
-    const handler2 = nextConnect({ onNoMatch });
+    const handler2 = nc({ onNoMatch });
     const app = createServer(handler2);
     return request(app).get('/').expect(200);
   });
+
+  it('call .find with pathname instead of url', () => {
+    const handler = nc().use('/test', (req, res) => res.end('ok'));
+    const app = createServer(handler);
+    return request(app).get('/test?p').expect('ok');
+  })
 });
 
 describe('apply()', () => {
   it('apply middleware to req and res', () => {
+    const handler = nc()
     handler.use((req, res, next) => {
       req.hello = 'world';
       next();
@@ -167,6 +176,7 @@ describe('apply()', () => {
   });
 
   it('reject if there is an error', () => {
+    const handler = nc()
     handler.use(() => {
       throw new Error('error :(');
     });
@@ -184,6 +194,7 @@ describe('apply()', () => {
 
 describe('onError', () => {
   it('default to onerror', () => {
+    const handler = nc()
     handler.get((req, res) => {
       throw new Error('error');
     });
@@ -196,7 +207,7 @@ describe('onError', () => {
     function onError(err, req, res, next) {
       res.end('One does not simply ignore error');
     }
-    const handler2 = nextConnect({ onError });
+    const handler2 = nc({ onError });
     handler2.use((req, res, next) => {
       next();
     });
@@ -214,7 +225,7 @@ describe('onError', () => {
     function onError(err, req, res, next) {
       next();
     }
-    const handler2 = nextConnect({ onError });
+    const handler2 = nc({ onError });
     handler2
       .get((req, res, next) => next())
       .get((req, res, next) => {
@@ -229,7 +240,7 @@ describe('onError', () => {
     function onError(err, req, res, next) {
       res.end(err.message);
     }
-    const handler2 = nextConnect({ onError });
+    const handler2 = nc({ onError });
     handler2.use((req, res, next) => {
       next();
     });
