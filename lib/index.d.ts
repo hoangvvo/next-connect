@@ -1,8 +1,5 @@
 declare module "next-connect" {
-  import { NextApiRequest, NextApiResponse } from "next";
-
-  type IncomingMessage = NextApiRequest;
-  type ServerResponse = NextApiResponse;
+  import { IncomingMessage, ServerResponse } from "http";
 
   type NextHandler = (err?: any) => void;
   type Middleware<T = {}, S = {}> = NextConnect | RequestHandler<T, S>;
