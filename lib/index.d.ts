@@ -28,9 +28,6 @@ declare module "next-connect" {
   ): Promise<void>;
 
   interface NextConnect<U, V> {
-    readonly onError: ErrorHandler<U, V>;
-    readonly onNoMatch: RequestHandler<U, V>;
-
     use<T = {}, S = {}>(...handlers: Middleware<U & T, V & S>[]): this;
     use<T = {}, S = {}>(pattern: string | RegExp, ...handlers: Middleware<U & T, V & S>[]): this;
 
