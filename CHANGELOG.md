@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- Fix TypeScript signature and support both API and non-API pages (#70) (Breaking)
+
 ## 0.7.1
 
 - Call trouter#find with pathname (#62)
