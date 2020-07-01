@@ -51,6 +51,7 @@ See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongod
 By default, the base interfaces of `req` and `res` are `IncomingMessage` and `ServerResponse`. When using in API Routes, you would set them to `NextApiRequest` and `NextApiResponse` by providing the generics to the factory function like so:
 
 ```typescript
+import { NextApiRequest, NextApiResponse } from 'next';
 import nc from 'next-connect';
 
 const handler = nc<NextApiRequest, NextApiResponse>()
