@@ -56,10 +56,9 @@ import nc from 'next-connect';
 const handler = nc<NextApiRequest, NextApiResponse>()
 ```
 
-In individual handler, you can also define custom properties to `req` and `res` (such as `req.user` or `res.cookie`) like so:
+In each handler, you can also define custom properties to `req` and `res` (such as `req.user` or `res.cookie`) like so:
 
 ```typescript
-
 interface ExtendedRequest { user: string };
 interface ExtendedResponse { cookie: (name: string, value: string) => void };
 
