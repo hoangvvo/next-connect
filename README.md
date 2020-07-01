@@ -1,9 +1,9 @@
 # next-connect
 
 [![npm](https://badgen.net/npm/v/next-connect)](https://www.npmjs.com/package/next-connect)
-[![install size](https://packagephobia.now.sh/badge?p=next-connect)](https://packagephobia.now.sh/result?p=next-connect)
 [![CircleCI](https://circleci.com/gh/hoangvvo/next-connect.svg?style=svg)](https://circleci.com/gh/hoangvvo/next-connect)
 [![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/master/graph/badge.svg)](https://codecov.io/gh/hoangvvo/next-connect)
+[![minified size](https://badgen.net/bundlephobia/min/next-connect)](https://bundlephobia.com/result?p=next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
 The method routing and middleware layer for [Next.js](https://nextjs.org/) (also works in [micro](https://github.com/zeit/micro) or [Node.js HTTP Server](https://nodejs.org/api/http.html)). Powered by [trouter](https://github.com/lukeed/trouter).
@@ -76,6 +76,8 @@ The API is similar to [Express.js](https://github.com/expressjs/express) with se
 - It does not include any [helper methods](http://expressjs.com/en/4x/api.html#res.append) or template engine (you can incorporate them using middleware)
 - It does not suppoprt error-handling middleware pattern. Use `options.onError` instead.
 
+It is more like good ol' [connect](https://www.npmjs.com/package/connect) (hence the name) with method routing.
+
 ### nc(options)
 
 Initialize an instance of `next-connect`.
@@ -124,6 +126,7 @@ const handler = nc({ onNoMatch });
 ### .use(base, ...fn)
 
 `base` (optional) - match all route to the right of `base` or match all if omitted.
+
 `fn`(s) are functions of `(req, res[, next])` **or** an instance of `next-connect`, where it will act as a sub application.
 
 ```javascript
@@ -133,16 +136,17 @@ handler.use((req, res, next) => {
   // call next if you want to proceed to next in chain
   next();
 });
-
 // Or include a base
 handler.use('/foo', fn); // Only run in /foo/**
 
 // Mount an instance of next-connect
-const subapp1 = nc().use('/baz', fnUSE).post('/qux', fnPOST);
-const subapp2 = nc().get('/bar', fnGET);
+const common = nc().use(midd1).use(midd2); // You may have some common middleware to be used in every route.
+const auth = nc().use('/dashboard', checkAuth);
+const subapp = nc().get(getHandle).post('/baz', postHandle);
 handler
-  .use(subapp1);
-  .use('/foo', subapp2); // Sub app or "Router" pattern: fnGET runs on /foo/bar, not /foo or /bar
+  .use(common) // `midd1` and `midd2` runs everywhere
+  .use(auth) // `checkAuth` runs on /dashboard/*
+  .use('/foo', subapp); // `getHandle` runs on /foo while `postHandle` runs on /foo/baz
 
 // You can use a library too.
 handler.use(passport.initialize());
@@ -151,7 +155,9 @@ handler.use(passport.initialize());
 ### .METHOD(pattern, ...fns)
 
 `METHOD` is a HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
+
 `pattern` (optional) - match all route based on [supported](https://github.com/lukeed/trouter#pattern) pattern or match all if omitted.
+
 `fn`(s) are functions of `(req, res[, next])`. This is ideal to be used in API Routes.
 
 ```javascript
@@ -167,7 +173,7 @@ handler.put('/user/:id', (req, res, next) => {
   res.end(`User ${req.query.id} updated`);
 });
 handler.get((req, res, next) => {
-  res.end('This matchs whatever route')
+  res.end('This matches whatever route')
 })
 ```
 
@@ -181,22 +187,24 @@ This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-featu
 
 ```javascript
 // page/index.js
-const handler = nc();
-handler.use(passport.initialize());
-handler.post(postMiddleware);
-
 export async function getServerSideProps({ req, res }) {
+  const handler = nc()
+    .use(passport.initialize())
+    .post(postMiddleware);
   try {
     await handler.apply(req, res);
-  } catch(e) {
+  } catch (e) {
     // handle the error
   }
   // do something with the upgraded req and res
   return {
-    props: { user: req.user }, // will be passed to the page component as props
-  }
-};
+    props: { user: req.user }
+  };
+}
+
 ```
+
+**Warning:** `.apply` is not meant to be used as a request handler because it does not render `404` or `onError` accordingly.
 
 ## Using in other frameworks
 
@@ -209,7 +217,7 @@ const {send} = require('micro')
 const handler = require('next-connect')()
 
 handler
-  .use(someMiddleware())
+  .use(middleware)
   .get(() => 'hello world')
   .post((req, res) => {
     send(res, 200, { hello: 'world' })
@@ -221,11 +229,11 @@ module.exports = handler;
 ### Node.js HTTP Server
 
 ```javascript
+const http = require('http')
 const handler = require('next-connect')()
-const http = require('http');
 
 handler
-  .use(someMiddleware())
+  .use(middleware)
   .get((req, res) => {
     res.end('Hello world');
   })
