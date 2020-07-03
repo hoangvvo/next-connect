@@ -1,21 +1,21 @@
 declare module "next-connect" {
   import { IncomingMessage, ServerResponse } from "http";
 
-  type NextHandler = (err?: any) => void;
+  type NextHandler = (err?: any) => Promise<any> | any;
   type Middleware<T, S> = NextConnect<T, S> | RequestHandler<T, S>;
 
   type RequestHandler<T, S> = (
     req: T,
     res: S,
     next: NextHandler
-  ) => void;
+  ) => ReturnType<NextHandler>;
 
   type ErrorHandler<T, S> = (
     err: any,
     req: T,
     res: S,
     next: NextHandler
-  ) => void;
+  ) => ReturnType<NextHandler>;
 
   interface Options<T, S> {
     onError?: ErrorHandler<T, S>;
