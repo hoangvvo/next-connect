@@ -31,6 +31,25 @@ describe('nc()', () => {
       .expect('quick math');
   });
 
+  it('supports async handlers', async () => {
+    const handler = nc()
+      .use(async (req, res, next) => {
+        res.setHeader('one', await new Promise(resolve => setTimeout(() => resolve('1'), 1)));
+        next()
+      })
+      .get((req, res) => new Promise(resolve => {
+        setTimeout(() => {
+          res.end('done');
+          resolve()
+        }, 1);
+      }));
+    const app = createServer(handler);
+    return await request(app)
+      .get('/')
+      .expect('one', '1')
+      .expect('done');
+  });
+
   it('is a function with two argument', () => {
     assert(typeof nc() === 'function' && nc().length === 2);
   });

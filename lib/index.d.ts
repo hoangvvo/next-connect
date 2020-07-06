@@ -8,14 +8,14 @@ declare module "next-connect" {
     req: T,
     res: S,
     next: NextHandler
-  ) => void;
+  ) => any | Promise<any>;
 
   type ErrorHandler<T, S> = (
     err: any,
     req: T,
     res: S,
     next: NextHandler
-  ) => void;
+  ) => any | Promise<any>;
 
   interface Options<T, S> {
     onError?: ErrorHandler<T, S>;
