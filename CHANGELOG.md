@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Fix handler return type (#75)
+
 ## 0.8.0
 
 - Fix TypeScript signature and support both API and non-API pages (#70) (Breaking)
