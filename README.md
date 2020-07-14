@@ -218,7 +218,9 @@ const handler = require('next-connect')()
 
 handler
   .use(middleware)
-  .get(() => 'hello world')
+  .get((req, res) => {
+    res.end('Hello World!')
+  })
   .post((req, res) => {
     send(res, 200, { hello: 'world' })
   });
