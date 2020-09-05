@@ -1,6 +1,6 @@
 {
   "name": "next-connect",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "The method routing and middleware layer for Next.js (and several others)",
   "keywords": [
     "javascript",

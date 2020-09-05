@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- Add all() to match any methods (#105)
+
 ## 0.8.1
 
 - Fix handler return type (#75)
