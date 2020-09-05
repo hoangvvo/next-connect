@@ -62,7 +62,7 @@ describe('nc()', () => {
 });
 
 describe('.METHOD', () => {
-  it('match all without path', () => {
+  it('match any path', () => {
     const handler = nc()
     METHODS.forEach((method) => {
       handler[method]((req, res) => res.end(method));
@@ -93,6 +93,39 @@ describe('.METHOD', () => {
     return Promise.all(requestPromises);
   });
 });
+
+describe('all()', () => {
+  it('match any path of any methods', () => {
+    const handler = nc();
+    handler.all((req, res) => res.end('all'));
+    const requestPromises = [];
+    const app = createServer(handler);
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)[method](`/${method}`).expect(method !== 'head' ? 'all' : undefined)
+      );
+    });
+    return Promise.all(requestPromises);
+  })
+
+  it('match by path of any methods', () => {
+    const handler = nc();
+    handler.all('/all', (req, res) => res.end('all'));
+    const requestPromises = [];
+    const app = createServer(handler);
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)[method](`/${method}`).expect(404)
+      );
+    });
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)[method](`/all`).expect(method !== 'head' ? 'all' : undefined)
+      );
+    });
+    return Promise.all(requestPromises);
+  })
+})
 
 describe('use()', () => {
   it('match all without base', async () => {
