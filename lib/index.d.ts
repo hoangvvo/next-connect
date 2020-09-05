@@ -31,6 +31,9 @@ declare module "next-connect" {
     use<T = {}, S = {}>(...handlers: Middleware<U & T, V & S>[]): this;
     use<T = {}, S = {}>(pattern: string | RegExp, ...handlers: Middleware<U & T, V & S>[]): this;
 
+    all<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
+    all<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<U & T, V & S>[]): this;
+
     get<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
     get<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<U & T, V & S>[]): this;
 
