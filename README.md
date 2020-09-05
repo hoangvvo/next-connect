@@ -179,6 +179,10 @@ handler.get((req, res, next) => {
 
 However, since Next.js already handles routing (including dynamic routes), we often omit `pattern` in `.METHOD`.
 
+### .all(pattern, ...fns)
+
+Same as [.METHOD](#methodpattern-fns) but accepts *any* methods.
+
 ### .apply(req, res)
 
 Applies the middleware and returns a **promise** after which you can use the upgraded `req` and `res`.
