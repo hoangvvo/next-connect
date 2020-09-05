@@ -99,6 +99,7 @@ describe('all()', () => {
     const handler = nc();
     handler.all((req, res) => res.end('all'));
     const requestPromises = [];
+    const app = createServer(handler);
     METHODS.forEach((method) => {
       requestPromises.push(
         request(app)[method](`/${method}`).expect(method !== 'head' ? 'all' : undefined)
@@ -111,6 +112,7 @@ describe('all()', () => {
     const handler = nc();
     handler.all('/all', (req, res) => res.end('all'));
     const requestPromises = [];
+    const app = createServer(handler);
     METHODS.forEach((method) => {
       requestPromises.push(
         request(app)[method](`/${method}`).expect(404)
