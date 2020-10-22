@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+
+- Deprecate apply() for run() (#108)
+
 ## 0.9.0
 
 - Add all() to match any methods (#105)
