@@ -58,6 +58,8 @@ declare module "next-connect" {
     patch<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
     patch<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<U & T, V & S>[]): this;
 
+    run(req: U, res: V): Promise<void>;
+    /** @deprecated */
     apply(req: U, res: V): Promise<void>;
 
     handle(req: U, res: V, done: NextHandler): void;
