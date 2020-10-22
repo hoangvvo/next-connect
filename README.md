@@ -43,7 +43,7 @@ const handler = nc()
 export default handler;
 ```
 
-For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.apply`](#applyreq-res).
+For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
 
 See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more)
 
@@ -184,9 +184,9 @@ However, since Next.js already handles routing (including dynamic routes), we of
 
 Same as [.METHOD](#methodpattern-fns) but accepts *any* methods.
 
-### .apply(req, res)
+### .run(req, res)
 
-Applies the middleware and returns a **promise** after which you can use the upgraded `req` and `res`.
+Runs `req` and `res` the middleware and returns a **promise**. It will **not** render `404` on not found or `onError` on error.
 
 This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
 
@@ -197,7 +197,7 @@ export async function getServerSideProps({ req, res }) {
     .use(passport.initialize())
     .post(postMiddleware);
   try {
-    await handler.apply(req, res);
+    await handler.run(req, res);
   } catch (e) {
     // handle the error
   }
@@ -208,8 +208,6 @@ export async function getServerSideProps({ req, res }) {
 }
 
 ```
-
-**Warning:** `.apply` is not meant to be used as a request handler because it does not render `404` or `onError` accordingly.
 
 ## Using in other frameworks
 
