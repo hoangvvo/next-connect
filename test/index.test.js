@@ -322,19 +322,3 @@ describe("onError", () => {
     return request(app).get("/").expect("Something failed");
   });
 });
-
-describe("deprecate", () => {
-  it("apply() for run()", async () => {
-    const handler = nc();
-    handler.use((req, res, next) => {
-      req.hello = "world";
-      next();
-    });
-    const app = createServer(async (req, res, next) => {
-      await handler.apply(req, res);
-      res.end(req.hello || "");
-    });
-    return request(app).get("/").expect("world");
-  });
-})
-
