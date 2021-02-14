@@ -301,14 +301,20 @@ describe("run()", () => {
 });
 
 describe("onError", () => {
-  it("default to onerror", () => {
+  it("default to onerror", async () => {
     const handler = nc();
     handler.get((req, res) => {
       throw new Error("error");
     });
+    handler.post((req, res) => {
+      const err = new Error();
+      err.status = 401;
+      throw err;
+    })
 
     const app = createServer(handler);
-    return request(app).get("/").expect(500).expect("error");
+    await request(app).get("/").expect(500).expect("error");
+    await request(app).post("/").expect(401).expect(""); // default to err.status
   });
 
   it("use custom onError", async () => {
