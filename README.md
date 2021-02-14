@@ -9,6 +9,12 @@
 
 The smol method routing and middleware for [Next.js](https://nextjs.org/) (also works in [other frameworks](#using-in-other-frameworks)). Powered by [trouter](https://github.com/lukeed/trouter).
 
+## Features
+
+- Compatible with Express.js middleware and router => Drop-in replacement for Express.js.
+- Lightweight (< 4KB) => Suitable for serverless environment.
+- 5x faster than Express.js
+
 ## Installation
 
 ```sh
