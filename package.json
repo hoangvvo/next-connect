@@ -26,6 +26,7 @@
     "lint": "eslint src -c .eslintrc --ext js",
     "test": "nyc mocha",
     "build": "bundt && cp src/index.d.ts dist",
+    "prepublishOnly": "npm run test && npm run build",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov"
   },
   "repository": {
