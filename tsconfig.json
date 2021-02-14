@@ -8,5 +8,5 @@
     "strictFunctionTypes": true,
     "esModuleInterop": true
   },
-  "include": ["lib/**/*"]
+  "include": ["dist/**/*"]
 }

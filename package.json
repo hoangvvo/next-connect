@@ -9,14 +9,23 @@
     "router",
     "connect"
   ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "lib/"
+    "dist"
   ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "lint": "eslint lib -c .eslintrc --ext js",
     "test": "nyc mocha",
+    "build": "bundt",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov"
   },
   "repository": {
@@ -31,6 +40,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^14.14.2",
+    "bundt": "^1.1.2",
     "eslint": "^7.11.0",
     "mocha": "^8.2.0",
     "nyc": "^15.1.0",
@@ -38,5 +48,10 @@
   },
   "dependencies": {
     "trouter": "^3.1.0"
+  },
+  "nyc": {
+    "include": [
+      "src/**/*.js"
+    ]
   }
 }

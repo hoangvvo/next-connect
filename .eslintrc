@@ -5,6 +5,7 @@
         "node": true,
         "mocha": true
     },
+    "sourceType": "module",
     "extends": "eslint:recommended",
     "globals": {
         "Atomics": "readonly",
