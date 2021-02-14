@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
-const assert = require("assert");
+import assert from "assert";
 //  Next.js API Routes behaves similar to Node HTTP Server
-const { createServer } = require("http");
-const request = require("supertest");
-const nc = require("../lib");
+import { createServer } from "http";
+import request from "supertest";
+import nc from "../src/index.js";
 
 const METHODS = [
   "get",

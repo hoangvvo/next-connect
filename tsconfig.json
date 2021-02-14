@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "lib": ["es6"],
+    "rootDir": "src",
+    "outDir": "dist",
+    "module": "ESNext",
+    "lib": ["ES2018"],
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "esModuleInterop": true
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
-  "include": ["lib/**/*"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -1,4 +1,4 @@
-const Trouter = require("trouter");
+import Trouter from "trouter";
 
 function onerror(err, req, res) {
   res.statusCode = err.status || 500;
@@ -7,11 +7,11 @@ function onerror(err, req, res) {
 
 const isResSent = (res) => res.finished || res.headersSent || res.writableEnded;
 
-module.exports = ({
+export default function factory({
   onError = onerror,
   onNoMatch = onerror.bind(null, { status: 404, message: "not found" }),
   attachParams = false,
-} = {}) => {
+} = {}) {
   function nc(req, res) {
     return nc.run(req, res).then(
       () => !isResSent(res) && onNoMatch(req, res),
@@ -80,4 +80,4 @@ module.exports = ({
     next();
   };
   return nc;
-};
+}
