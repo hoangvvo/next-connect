@@ -28,6 +28,8 @@ declare module "next-connect" {
   ): Promise<void>;
 
   interface NextConnect<U, V> {
+    mouthpath: string;
+
     use<T = {}, S = {}>(...handlers: Middleware<U & T, V & S>[]): this;
     use<T = {}, S = {}>(pattern: string | RegExp, ...handlers: Middleware<U & T, V & S>[]): this;
 
@@ -59,8 +61,6 @@ declare module "next-connect" {
     patch<T = {}, S = {}>(pattern: string | RegExp, ...handlers: RequestHandler<U & T, V & S>[]): this;
 
     run(req: U, res: V): Promise<void>;
-    /** @deprecated */
-    apply(req: U, res: V): Promise<void>;
 
     handle(req: U, res: V, done: NextHandler): void;
   }
