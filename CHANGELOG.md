@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.0
+
+- Express Router compatibility (#121)
+- Add ESModule export (#122)
+
 ## 0.9.1
 
 - Deprecate apply() for run() (#108)
