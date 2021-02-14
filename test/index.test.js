@@ -211,7 +211,7 @@ describe("use()", () => {
     handler.use("/sub", handler2);
     const app = createServer(handler);
     await request(app).get("/sub/foo").expect("/foo");
-  })
+  });
 
   it("req.url must starts with slash after strip base", async () => {
     const handler2 = nc();
@@ -222,7 +222,7 @@ describe("use()", () => {
     handler.use("/sub", handler2);
     const app = createServer(handler);
     await request(app).get("/sub").expect("/");
-  })
+  });
 
   it("req.url is back to original after subapp", async () => {
     const handler2 = nc();
@@ -233,12 +233,12 @@ describe("use()", () => {
     handler.use("/sub", handler2);
     handler.get((req, res) => {
       res.end(req.url);
-    })
+    });
     const app = createServer(handler);
     await request(app).get("/sub/foo").expect("/sub/foo");
     // undo added slash
     await request(app).get("/sub?").expect("/sub?");
-  })
+  });
 });
 
 describe("handle()", () => {
@@ -362,17 +362,20 @@ describe("onError", () => {
 });
 
 describe("req.params", () => {
-  const addParamsRoute = (ncInstance) => ncInstance.get("/:userId", (req, res) => {
-    res.end(""+JSON.stringify(req.params));
-  });
+  const addParamsRoute = (ncInstance) =>
+    ncInstance.get("/:userId", (req, res) => {
+      res.end("" + JSON.stringify(req.params));
+    });
+
   it("is undefined if attachParams is falsy", async () => {
     const handler = addParamsRoute(nc());
-    await request(createServer(handler)).get("/1").expect('undefined');
+    await request(createServer(handler)).get("/1").expect("undefined");
     const handler2 = addParamsRoute(nc({ attachParams: false }));
-    await request(createServer(handler2)).get("/1").expect('undefined');
+    await request(createServer(handler2)).get("/1").expect("undefined");
   });
+
   it("is params object if attachParams is true", () => {
     const handler = addParamsRoute(nc({ attachParams: true }));
     return request(createServer(handler)).get("/1").expect('{"userId":"1"}');
-  })
-})
+  });
+});
