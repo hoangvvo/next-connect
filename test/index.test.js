@@ -201,6 +201,44 @@ describe("use()", () => {
     await request(app).get("/sub").expect(404);
     await request(app).get("/foo").expect(404);
   });
+
+  it("strip base from req.url", async () => {
+    const handler2 = nc();
+    handler2.get("/foo", (req, res) => {
+      res.end(req.url);
+    });
+    const handler = nc();
+    handler.use("/sub", handler2);
+    const app = createServer(handler);
+    await request(app).get("/sub/foo").expect("/foo");
+  });
+
+  it("req.url must starts with slash after strip base", async () => {
+    const handler2 = nc();
+    handler2.get((req, res) => {
+      res.end(req.url);
+    });
+    const handler = nc();
+    handler.use("/sub", handler2);
+    const app = createServer(handler);
+    await request(app).get("/sub").expect("/");
+  });
+
+  it("req.url is back to original after subapp", async () => {
+    const handler2 = nc();
+    handler2.get((req, res, next) => {
+      next();
+    });
+    const handler = nc();
+    handler.use("/sub", handler2);
+    handler.get((req, res) => {
+      res.end(req.url);
+    });
+    const app = createServer(handler);
+    await request(app).get("/sub/foo").expect("/sub/foo");
+    // undo added slash
+    await request(app).get("/sub?").expect("/sub?");
+  });
 });
 
 describe("handle()", () => {
@@ -225,7 +263,7 @@ describe("handle()", () => {
   });
 
   it("call .find with pathname instead of url", () => {
-    const handler = nc().use("/test", (req, res) => res.end("ok"));
+    const handler = nc().get("/test", (req, res) => res.end("ok"));
     const app = createServer(handler);
     return request(app).get("/test?p").expect("ok");
   });
@@ -263,14 +301,20 @@ describe("run()", () => {
 });
 
 describe("onError", () => {
-  it("default to onerror", () => {
+  it("default to onerror", async () => {
     const handler = nc();
     handler.get((req, res) => {
       throw new Error("error");
     });
+    handler.post((req, res) => {
+      const err = new Error();
+      err.status = 401;
+      throw err;
+    })
 
     const app = createServer(handler);
-    return request(app).get("/").expect(500).expect("error");
+    await request(app).get("/").expect(500).expect("error");
+    await request(app).post("/").expect(401).expect(""); // default to err.status
   });
 
   it("use custom onError", async () => {
@@ -323,18 +367,21 @@ describe("onError", () => {
   });
 });
 
-describe("deprecate", () => {
-  it("apply() for run()", async () => {
-    const handler = nc();
-    handler.use((req, res, next) => {
-      req.hello = "world";
-      next();
+describe("req.params", () => {
+  const addParamsRoute = (ncInstance) =>
+    ncInstance.get("/:userId", (req, res) => {
+      res.end("" + JSON.stringify(req.params));
     });
-    const app = createServer(async (req, res, next) => {
-      await handler.apply(req, res);
-      res.end(req.hello || "");
-    });
-    return request(app).get("/").expect("world");
-  });
-})
 
+  it("is undefined if attachParams is falsy", async () => {
+    const handler = addParamsRoute(nc());
+    await request(createServer(handler)).get("/1").expect("undefined");
+    const handler2 = addParamsRoute(nc({ attachParams: false }));
+    await request(createServer(handler2)).get("/1").expect("undefined");
+  });
+
+  it("is params object if attachParams is true", () => {
+    const handler = addParamsRoute(nc({ attachParams: true }));
+    return request(createServer(handler)).get("/1").expect('{"userId":"1"}');
+  });
+});
