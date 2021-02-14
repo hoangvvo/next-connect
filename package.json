@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "lint": "eslint lib -c .eslintrc --ext js",
+    "lint": "eslint src -c .eslintrc --ext js",
     "test": "nyc mocha",
     "build": "bundt && cp src/index.d.ts dist",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov"
