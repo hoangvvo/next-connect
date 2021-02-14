@@ -25,7 +25,7 @@
   "scripts": {
     "lint": "eslint lib -c .eslintrc --ext js",
     "test": "nyc mocha",
-    "build": "bundt",
+    "build": "bundt && cp src/index.d.ts dist",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov"
   },
   "repository": {
