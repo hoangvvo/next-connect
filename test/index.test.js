@@ -223,6 +223,22 @@ describe("use()", () => {
     const app = createServer(handler);
     await request(app).get("/sub").expect("/");
   })
+
+  it("req.url is back to original after subapp", async () => {
+    const handler2 = nc();
+    handler2.get((req, res, next) => {
+      next();
+    });
+    const handler = nc();
+    handler.use("/sub", handler2);
+    handler.get((req, res) => {
+      res.end(req.url);
+    })
+    const app = createServer(handler);
+    await request(app).get("/sub/foo").expect("/sub/foo");
+    // undo added slash
+    await request(app).get("/sub?").expect("/sub?");
+  })
 });
 
 describe("handle()", () => {

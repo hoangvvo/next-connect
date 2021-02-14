@@ -14,6 +14,7 @@
         "ecmaVersion": 2018
     },
     "rules": {
-        "no-unexpected-multiline": "off"
+        "no-unexpected-multiline": "off",
+        "no-cond-assign": "off"
     }
 }
