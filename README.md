@@ -12,8 +12,10 @@ The smol method routing and middleware for [Next.js](https://nextjs.org/) (also 
 ## Features
 
 - Compatible with Express.js middleware and router => Drop-in replacement for Express.js.
-- Lightweight (< 4KB) => Suitable for serverless environment.
-- 5x faster than Express.js
+- Lightweight (~ 3KB) => Suitable for serverless environment.
+- 5x faster than Express.js with no overhead
+- Works with async handlers (with error catching)
+- TypeScript support
 
 ## Installation
 
@@ -49,7 +51,7 @@ const handler = nc()
 export default handler;
 ```
 
-For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` *and* `express.Router()` with `nc()` and following [Match multiple routes recipe](#catch-all).
+For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` *and* `express.Router()` with `nc()` and follow the [match multiple routes recipe](#catch-all).
 
 For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
 

@@ -1,7 +1,7 @@
 {
   "name": "next-connect",
   "version": "0.10.0",
-  "description": "The method routing and middleware layer for Next.js (and several others)",
+  "description": "The method routing and middleware layer for Next.js (and many others)",
   "keywords": [
     "javascript",
     "nextjs",
@@ -22,6 +22,7 @@
       "import": "./dist/index.js"
     }
   },
+  "sideEffects": false,
   "scripts": {
     "lint": "eslint src -c .eslintrc --ext js",
     "test": "c8 mocha",
