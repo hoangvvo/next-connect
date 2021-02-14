@@ -178,14 +178,14 @@ handler.use(passport.initialize());
 `fn`(s) are functions of `(req, res[, next])`. This is ideal to be used in API Routes.
 
 ```javascript
-handler.use('/user', passport.initialize());
-handler.get('/user', (req, res, next) => {
+handler.use('/api/user', passport.initialize());
+handler.get('/api/user', (req, res, next) => {
   res.json(req.user);
 });
-handler.post('/users', (req, res, next) => {
+handler.post('/api/users', (req, res, next) => {
   res.end('User created');
 });
-handler.put('/user/:id', (req, res, next) => {
+handler.put('/api/user/:id', (req, res, next) => {
   // https://nextjs.org/docs/routing/dynamic-routes
   res.end(`User ${req.query.id} updated`);
 });
@@ -222,14 +222,35 @@ export async function getServerSideProps({ req, res }) {
     props: { user: req.user }
   };
 }
-
 ```
 
-
-
-
-
 ## Recipes
+
+### Next.js
+
+<details id="catch-all">
+<summary>Match multiple routes</summary>
+
+If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route. 
+
+If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
+
+```js
+// pages/api/[[...slug]].js
+import nc from 'next-connect';
+
+const handler = nc({ attachParams: true })
+  .use("/api/hello", someMiddleware())
+  .get("/api/user/:userId", (req, res) => {
+    res.send(`Hello ${req.params.userId}`);
+  });
+
+export default handler;
+```
+
+While this allows quick migration from Express.js, consider seperating routes into different files (`/api/user/[userId].js`, `/api/hello.js`) in the future.
+
+</details>
 
 ### Using in other frameworks
 
@@ -277,7 +298,7 @@ module.exports = nc()
 
 ```javascript
 const http = require('http')
-// const http = require('http2)
+// const http = require('http2')
 const nc = require('next-connect')
 
 const handler = nc()
@@ -292,32 +313,6 @@ const handler = nc()
 
 http.createServer(handler).listen(PORT);
 ```
-
-</details>
-
-### Next.js
-
-<details id="catch-all">
-<summary>Match multiple routes</summary>
-
-If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route. 
-
-If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
-
-```js
-// pages/api/[[...slug]].js
-import nc from 'next-connect';
-
-const handler = nc({ attachParams: true })
-  .use("/api/hello", someMiddleware())
-  .get("/api/user/:userId", (req, res) => {
-    res.send(`Hello ${req.params.userId}`);
-  });
-
-export default handler;
-```
-
-While this allows quick migration from Express.js, consider seperating routes into different files (`/api/user/[userId].js`, `/api/hello.js`) in the future.
 
 </details>
 
