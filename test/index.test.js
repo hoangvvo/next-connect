@@ -201,6 +201,28 @@ describe("use()", () => {
     await request(app).get("/sub").expect(404);
     await request(app).get("/foo").expect(404);
   });
+
+  it("strip base from req.url", async () => {
+    const handler2 = nc();
+    handler2.get("/foo", (req, res) => {
+      res.end(req.url);
+    });
+    const handler = nc();
+    handler.use("/sub", handler2);
+    const app = createServer(handler);
+    await request(app).get("/sub/foo").expect("/foo");
+  })
+
+  it("req.url must starts with slash after strip base", async () => {
+    const handler2 = nc();
+    handler2.get((req, res) => {
+      res.end(req.url);
+    });
+    const handler = nc();
+    handler.use("/sub", handler2);
+    const app = createServer(handler);
+    await request(app).get("/sub").expect("/");
+  })
 });
 
 describe("handle()", () => {
@@ -225,7 +247,7 @@ describe("handle()", () => {
   });
 
   it("call .find with pathname instead of url", () => {
-    const handler = nc().use("/test", (req, res) => res.end("ok"));
+    const handler = nc().get("/test", (req, res) => res.end("ok"));
     const app = createServer(handler);
     return request(app).get("/test?p").expect("ok");
   });

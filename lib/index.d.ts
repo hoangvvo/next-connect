@@ -29,8 +29,6 @@ declare module "next-connect" {
   ): Promise<void>;
 
   interface NextConnect<U, V> {
-    mouthpath: string;
-
     use<T = {}, S = {}>(...handlers: Middleware<U & T, V & S>[]): this;
     use<T = {}, S = {}>(pattern: string | RegExp, ...handlers: Middleware<U & T, V & S>[]): this;
 
