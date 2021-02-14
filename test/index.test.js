@@ -322,3 +322,19 @@ describe("onError", () => {
     return request(app).get("/").expect("Something failed");
   });
 });
+
+describe("req.params", () => {
+  const addParamsRoute = (ncInstance) => ncInstance.get("/:userId", (req, res) => {
+    res.end(""+JSON.stringify(req.params));
+  });
+  it("is undefined if attachParams is falsy", async () => {
+    const handler = addParamsRoute(nc());
+    await request(createServer(handler)).get("/1").expect('undefined');
+    const handler2 = addParamsRoute(nc({ attachParams: false }));
+    await request(createServer(handler2)).get("/1").expect('undefined');
+  });
+  it("is params object if attachParams is true", () => {
+    const handler = addParamsRoute(nc({ attachParams: true }));
+    return request(createServer(handler)).get("/1").expect('{"userId":"1"}');
+  })
+})

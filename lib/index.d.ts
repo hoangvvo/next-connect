@@ -20,6 +20,7 @@ declare module "next-connect" {
   interface Options<T, S> {
     onError?: ErrorHandler<T, S>;
     onNoMatch?: RequestHandler<T, S>;
+    attachParams?: boolean;
   }
 
   function NextConnect<U, V>(

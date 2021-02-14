@@ -7,7 +7,7 @@
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The smol method routing and middleware for [Next.js](https://nextjs.org/) (also works in [micro](https://github.com/zeit/micro) or [Node.js HTTP Server](https://nodejs.org/api/http.html)). Powered by [trouter](https://github.com/lukeed/trouter).
+The smol method routing and middleware for [Next.js](https://nextjs.org/) (also works in [other frameworks](#using-in-other-frameworks)). Powered by [trouter](https://github.com/lukeed/trouter).
 
 ## Installation
 
@@ -22,7 +22,7 @@ yarn add next-connect
 `next-connect` is often used in [API Routes](https://nextjs.org/docs/api-routes/introduction):
 
 ```javascript
-// pages/api/index.js
+// pages/api/hello-world.js
 import nc from 'next-connect';
 
 const handler = nc()
@@ -42,6 +42,8 @@ const handler = nc()
 
 export default handler;
 ```
+
+For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` *and* `express.Router()` with `nc()` and following [Match multiple routes recipe](#catch-all).
 
 For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
 
@@ -122,6 +124,20 @@ function onNoMatch(req, res) {
 }
 
 const handler = nc({ onNoMatch });
+```
+
+#### options.attachParams
+
+Passing `true` will attach `params` object to `req`. By default, it does not set `req.params`.
+
+```javascript
+const handler = nc({ attachParams: true });
+
+handler.get("/users/:userId/posts/:postId", (req, res) => {
+  res.send(req.params);
+});
+
+// Visiting '/users/12/posts/23' will render '{"userId": "12","postId":"23"}'
 ```
 
 ### .use(base, ...fn)
@@ -209,17 +225,24 @@ export async function getServerSideProps({ req, res }) {
 
 ```
 
-## Using in other frameworks
 
-`next-connect` supports any frameworks that has the signature of `(req, res)`.
 
-### [Micro](https://github.com/zeit/micro)
+
+
+## Recipes
+
+### Using in other frameworks
+
+`next-connect` supports any frameworks and runtimes that support `(req, res) => void` handler.
+
+<details>
+<summary><a href="https://github.com/zeit/micro">Micro</a></summary>
 
 ```javascript
 const {send} = require('micro')
-const handler = require('next-connect')()
+const nc = require('next-connect')
 
-handler
+module.exports = nc()
   .use(middleware)
   .get((req, res) => {
     res.end('Hello World!')
@@ -227,17 +250,37 @@ handler
   .post((req, res) => {
     send(res, 200, { hello: 'world' })
   });
-
-module.exports = handler;
 ```
 
-### Node.js HTTP Server
+</details>
+
+<details>
+<summary><a href="https://vercel.com/docs/serverless-functions/introduction">Vercel</a></summary>
+
+```javascript
+const nc = require('next-connect')
+
+module.exports = nc()
+  .use(middleware)
+  .get((req, res) => {
+    res.send('Hello World!')
+  })
+  .post((req, res) => {
+    res.json({ hello: 'world' })
+  });
+```
+
+</details>
+
+<details>
+<summary>Node.js <a href="https://nodejs.org/api/http.html">HTTP</a> / <a href="https://nodejs.org/api/http2.html">HTTP2</a> Server</summary>
 
 ```javascript
 const http = require('http')
-const handler = require('next-connect')()
+// const http = require('http2)
+const nc = require('next-connect')
 
-handler
+const handler = nc()
   .use(middleware)
   .get((req, res) => {
     res.end('Hello world');
@@ -249,6 +292,34 @@ handler
 
 http.createServer(handler).listen(PORT);
 ```
+
+</details>
+
+### Next.js
+
+<details id="catch-all">
+<summary>Match multiple routes</summary>
+
+If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route. 
+
+If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
+
+```js
+// pages/api/[[...slug]].js
+import nc from 'next-connect';
+
+const handler = nc({ attachParams: true })
+  .use("/api/hello", someMiddleware())
+  .get("/api/user/:userId", (req, res) => {
+    res.send(`Hello ${req.params.userId}`);
+  });
+
+export default handler;
+```
+
+While this allows quick migration from Express.js, consider seperating routes into different files (`/api/user/[userId].js`, `/api/hello.js`) in the future.
+
+</details>
 
 ## Contributing
 
