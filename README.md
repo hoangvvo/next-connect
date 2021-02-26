@@ -7,7 +7,7 @@
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The small method routing and middleware for [Next.js](https://nextjs.org/) (also works in [other frameworks](#using-in-other-frameworks)). Powered by [trouter](https://github.com/lukeed/trouter).
+The smol method routing and middleware for [Next.js](https://nextjs.org/) (also works in [other frameworks](#using-in-other-frameworks)). Powered by [trouter](https://github.com/lukeed/trouter).
 
 ## Features
 
@@ -89,7 +89,7 @@ handler.post<ExtendedRequest, ExtendedResponse>((req, res) => {
 The API is similar to [Express.js](https://github.com/expressjs/express) with several differences:
 
 - It does not include any [helper methods](http://expressjs.com/en/4x/api.html#res.append) or template engine (you can incorporate them using middleware).
-- It does not suppoprt error-handling middleware pattern. Use `options.onError` instead.
+- It does not support error-handling middleware pattern. Use `options.onError` instead.
 
 It is more like good ol' [connect](https://www.npmjs.com/package/connect) (hence the name) with method routing.
 
@@ -100,7 +100,7 @@ Initialize an instance of `next-connect`.
 #### options.onError
 
 Accepts a function as a catch-all error handler; executed whenever a middleware throws an error.
-By default, it responses with status code `500` and error message if any.
+By default, it responds with status code `500` and an error message if any.
 
 ```javascript
 function onError(err, req, res, next) {
@@ -128,7 +128,7 @@ handler
 #### options.onNoMatch
 
 Accepts a function of `(req, res)` as a handler when no route is matched.
-By default, it responses with `404` status and `not found` body.
+By default, it responds with `404` status and `not found` body.
 
 ```javascript
 function onNoMatch(req, res) {
