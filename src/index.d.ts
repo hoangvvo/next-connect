@@ -23,9 +23,9 @@ declare module "next-connect" {
     attachParams?: boolean;
   }
 
-  function NextConnect<U, V>(req: U, res: V): Promise<void>;
-
   interface NextConnect<U, V> {
+    (req: U, res: V): Promise<void>;
+
     use<T = {}, S = {}>(...handlers: Middleware<U & T, V & S>[]): this;
     use<T = {}, S = {}>(
       pattern: string | RegExp,
