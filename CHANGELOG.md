@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+- Make NextConnect compatible with NextApiHandler (#128)
+- docs(README): fix typo (#123)
+- Mark sideEffects false and update README (21c9c73fe3746e66033fd51e2aa01d479e267ad6)
+
 ## 0.10.0
 
 - Express Router compatibility (#121)
