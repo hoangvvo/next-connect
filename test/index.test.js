@@ -66,7 +66,7 @@ describe("nc()", () => {
   });
 
   it("returns a promise", () => {
-    nc()({}, { end: () => null }).then((e) => {
+    nc()({}, { end: () => null }).then(() => {
       /* no-op */
     });
   });
@@ -275,7 +275,7 @@ describe("run()", () => {
       req.hello = "world";
       next();
     });
-    const app = createServer(async (req, res, next) => {
+    const app = createServer(async (req, res) => {
       await handler.run(req, res);
       res.end(req.hello || "");
     });
@@ -287,7 +287,7 @@ describe("run()", () => {
     handler.use(() => {
       throw new Error("error :(");
     });
-    const app = createServer(async (req, res, next) => {
+    const app = createServer(async (req, res) => {
       try {
         await handler.run(req, res);
         res.end("good");
@@ -302,14 +302,14 @@ describe("run()", () => {
 describe("onError", () => {
   it("default to onerror", async () => {
     const handler = nc();
-    handler.get((req, res) => {
+    handler.get(() => {
       throw new Error("error");
     });
-    handler.post((req, res) => {
+    handler.post(() => {
       const err = new Error();
       err.status = 401;
       throw err;
-    })
+    });
 
     const app = createServer(handler);
     await request(app).get("/").expect(500).expect("error");
@@ -317,14 +317,14 @@ describe("onError", () => {
   });
 
   it("use custom onError", async () => {
-    function onError(err, req, res, next) {
+    function onError(err, req, res) {
       res.end("One does not simply ignore error");
     }
     const handler2 = nc({ onError });
     handler2.use((req, res, next) => {
       next();
     });
-    handler2.get((req, res, next) => {
+    handler2.get(() => {
       throw new Error("wackk");
     });
     const app = createServer(handler2);
@@ -341,7 +341,7 @@ describe("onError", () => {
     const handler2 = nc({ onError });
     handler2
       .get((req, res, next) => next())
-      .get((req, res, next) => {
+      .get(() => {
         throw new Error();
       })
       .get((req, res) => res.end("no error"));
@@ -350,14 +350,14 @@ describe("onError", () => {
   });
 
   it("catch async errors", () => {
-    function onError(err, req, res, next) {
+    function onError(err, req, res) {
       res.end(err.message);
     }
     const handler2 = nc({ onError });
     handler2.use((req, res, next) => {
       next();
     });
-    handler2.use(async (req, res) => {
+    handler2.use(async () => {
       throw new Error("Something failed");
     });
     handler2.get(async (req, res) => res.end("ok"));

@@ -1,11 +1,9 @@
 import Trouter from "trouter";
 
-function onerror(err, req, res) {
-  res.statusCode = err.status || 500;
-  res.end(err.message);
-}
-
+const onerror = (err, req, res) =>
+  (res.statusCode = err.status || 500) && res.end(err.message);
 const isResSent = (res) => res.finished || res.headersSent || res.writableEnded;
+const mount = (fn) => (fn.routes ? fn.handle.bind(fn) : fn);
 
 export default function factory({
   onError = onerror,
@@ -42,7 +40,6 @@ export default function factory({
           next()
       );
     }
-    const mount = (fn) => (fn.routes ? fn.handle.bind(fn) : fn);
     _use(base, ...fns.map(mount));
     return nc;
   };

@@ -2,96 +2,115 @@ declare module "next-connect" {
   import { IncomingMessage, ServerResponse } from "http";
 
   type NextHandler = (err?: any) => void;
-  type Middleware<T, S> = NextConnect<T, S> | RequestHandler<T, S>;
+  type Middleware<Req, Res> = NextConnect<Req, Res> | RequestHandler<Req, Res>;
 
-  type RequestHandler<T, S> = (
-    req: T,
-    res: S,
+  type RequestHandler<Req, Res> = (
+    req: Req,
+    res: Res,
     next: NextHandler
   ) => any | Promise<any>;
 
-  type ErrorHandler<T, S> = (
+  type ErrorHandler<Req, Res> = (
     err: any,
-    req: T,
-    res: S,
+    req: Req,
+    res: Res,
     next: NextHandler
   ) => any | Promise<any>;
 
-  interface Options<T, S> {
-    onError?: ErrorHandler<T, S>;
-    onNoMatch?: RequestHandler<T, S>;
+  interface Options<Req, Res> {
+    onError?: ErrorHandler<Req, Res>;
+    onNoMatch?: RequestHandler<Req, Res>;
     attachParams?: boolean;
   }
+  interface NextConnect<Req, Res> {
+    (req: Req, res: Res): Promise<void>;
 
-  interface NextConnect<U, V> {
-    (req: U, res: V): Promise<void>;
-
-    use<T = {}, S = {}>(...handlers: Middleware<U & T, V & S>[]): this;
-    use<T = {}, S = {}>(
+    use<ReqExt = {}, ResExt = {}>(
+      ...handlers: Middleware<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    use<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: Middleware<U & T, V & S>[]
+      ...handlers: Middleware<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    all<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    all<T = {}, S = {}>(
+    all<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    all<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    get<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    get<T = {}, S = {}>(
+    get<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    get<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    head<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    head<T = {}, S = {}>(
+    head<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    head<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    post<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    post<T = {}, S = {}>(
+    post<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    post<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    put<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    put<T = {}, S = {}>(
+    put<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    put<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    delete<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    delete<T = {}, S = {}>(
+    delete<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    delete<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    options<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    options<T = {}, S = {}>(
+    options<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    options<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    trace<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    trace<T = {}, S = {}>(
+    trace<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    trace<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    patch<T = {}, S = {}>(...handlers: RequestHandler<U & T, V & S>[]): this;
-    patch<T = {}, S = {}>(
+    patch<ReqExt = {}, ResExt = {}>(
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    patch<ReqExt = {}, ResExt = {}>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<U & T, V & S>[]
+      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
     ): this;
 
-    run(req: U, res: V): Promise<void>;
+    run(req: Req, res: Res): Promise<void>;
 
-    handle(req: U, res: V, done: NextHandler): void;
+    handle(req: Req, res: Res, done: NextHandler): void;
   }
 
-  export default function <T = IncomingMessage, S = ServerResponse>(
-    options?: Options<T, S>
-  ): NextConnect<T, S>;
+  export default function <Req = IncomingMessage, Res = ServerResponse>(
+    options?: Options<Req, Res>
+  ): NextConnect<Req, Res>;
 }
