@@ -63,7 +63,7 @@ export default function factory({
       req.method,
       idx !== -1 ? req.url.substring(0, idx) : req.url
     );
-    if (attachParams) req.params = params;
+    if (attachParams) req.params = Object.assign(req.params, params);
     let i = 0;
     const len = handlers.length;
     const loop = async (next) => handlers[i++](req, res, next);
