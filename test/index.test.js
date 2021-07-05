@@ -39,20 +39,21 @@ describe("nc()", () => {
       .expect("quick math");
   });
 
-  it("supports async handlers", async () => {
+  it("supports async handlers and middleware", async () => {
     const handler = nc()
       .use(async (req, res, next) => {
         res.setHeader(
           "one",
           await new Promise((resolve) => setTimeout(() => resolve("1"), 1))
         );
-        next();
+        await next();
+        res.end(res.body)
       })
       .get(
         (req, res) =>
           new Promise((resolve) => {
             setTimeout(() => {
-              res.end("done");
+              res.body = "done"
               resolve();
             }, 1);
           })
