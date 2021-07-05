@@ -61,6 +61,25 @@ describe("nc()", () => {
     return await request(app).get("/").expect("one", "1").expect("done");
   });
 
+  it("supports async middleware", async () => {
+    const handler = nc()
+      .use(async (req, res, next) => {
+        await next();
+        res.end(res.body)
+      })
+      .get(
+        (req, res) =>
+          new Promise((resolve) => {
+            setTimeout(() => {
+              res.body = "done"
+              resolve();
+            }, 1);
+          })
+      );
+    const app = createServer(handler);
+    return await request(app).get("/").expect("done");
+  });
+
   it("is a function with two argument", () => {
     assert(typeof nc() === "function" && nc().length === 2);
   });

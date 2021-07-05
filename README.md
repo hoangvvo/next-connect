@@ -14,7 +14,7 @@ The smol method routing and middleware for [Next.js](https://nextjs.org/) (also 
 - Compatible with Express.js middleware and router => Drop-in replacement for Express.js.
 - Lightweight (~ 3KB) => Suitable for serverless environment.
 - 5x faster than Express.js with no overhead
-- Works with async handlers (with error catching)
+- Works with async handlers and middleware (with error catching)
 - TypeScript support
 
 ## Installation
@@ -56,6 +56,30 @@ For quick migration from [Custom Express server](https://nextjs.org/docs/advance
 For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
 
 See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more)
+
+### Async middleware
+
+Middleware may `await next()` to perform actions after the request handler has been resolved. Like other tools which support async middleware, however, **all** middleware in the handler **must** call `next()` with `await` or `return` to execute properly.
+
+```javascript
+import nc from "next-connect";
+
+const handler = nc()
+  .use(async (req, res, next) => {
+    await next(); // Waits for .get() handler.
+
+    if (!res.writableEnded) {
+      res.end(res.body); // respond with "Hello world"!
+    }
+  })
+  .get(async (req, res) => {
+    res.body = "Hello world";
+  })
+
+export default handler;
+```
+
+
 
 ### TypeScript
 
@@ -244,7 +268,7 @@ export async function getServerSideProps({ req, res }) {
 <details id="catch-all">
 <summary>Match multiple routes</summary>
 
-If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route. 
+If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route.
 
 If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
 
