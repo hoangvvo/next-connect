@@ -17,7 +17,7 @@ declare module "next-connect" {
     next: NextHandler
   ) => any | Promise<any>;
 
-  interface Options<Req, Res> {
+  export interface Options<Req, Res> {
     onError?: ErrorHandler<Req, Res>;
     onNoMatch?: RequestHandler<Req, Res>;
     attachParams?: boolean;
