@@ -237,6 +237,42 @@ export async function getServerSideProps({ req, res }) {
 }
 ```
 
+## Patterns
+
+1. **DO NOT** reuse the same instance of `nc` like the below pattern:
+
+```js
+// middleware/common
+export default nc().use(a).use(b);
+
+// api/foo
+import Handler from "middleware/common";
+export default Handler.get(x);
+
+// api/bar
+import Handler from "middleware/common";
+export default Handler.get(y);
+```
+
+This is because in each API Route, the same NextConnect instance is mutated, leading to undefined behaviors.
+If you want to achieve the something like that, try rewriting the base instance as a factory function to avoid reusing the same instance:
+
+```js
+// middleware/common
+export default function base() {
+  return nc().use(a).use(b);
+}
+
+// api/foo
+import base from "middleware/common";
+export default base().get(x);
+
+// api/bar
+import base from "middleware/common";
+export default base().get(y);
+```
+
+
 ## Recipes
 
 ### Next.js
