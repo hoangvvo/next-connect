@@ -237,7 +237,7 @@ export async function getServerSideProps({ req, res }) {
 }
 ```
 
-## Patterns
+## Common errors
 
 1. **DO NOT** reuse the same instance of `nc` like the below pattern:
 
@@ -272,6 +272,27 @@ import base from "middleware/common";
 export default base().get(y);
 ```
 
+2. **DO NOT** use response function like `res.(s)end` or `res.redirect` inside `getServerSideProps`.
+
+```js
+// page/index.js
+const handler = nc()
+  .use((req, res) => {
+    // BAD: res.redirect is not a function (not defined in `getServerSideProps`
+    res.redirect("foo");
+  })
+  .use((req, res) => {
+    // BAD: `getServerSideProps` gives undefined behavior if we try to send response
+    res.end("bar");
+  });
+
+export async function getServerSideProps({ req, res }) {
+  await handler.run(req, res);
+  return {
+    props: {},
+  };
+}
+```
 
 ## Recipes
 
