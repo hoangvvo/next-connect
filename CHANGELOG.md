@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+
+- Export the options interface (#152)
+
 ## 0.10.1
 
 - Make NextConnect compatible with NextApiHandler (#128)
