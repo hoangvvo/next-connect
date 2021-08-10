@@ -26,20 +26,23 @@ export default function factory({
     return nc;
   }
   nc.use = function use(base, ...fns) {
-    if (typeof base !== "string") return this.use("/", base, ...fns);
-    if (base !== "/") {
-      let slashAdded = false;
-      fns.unshift((req, _, next) => {
-        req.url = req.url.substring(base.length);
-        if ((slashAdded = req.url[0] !== "/")) req.url = "/" + req.url;
-        next();
-      });
-      fns.push(
-        (req, _, next) =>
-          (req.url = base + (slashAdded ? req.url.substring(1) : req.url)) &&
-          next()
-      );
+    if(!(base instanceof RegExp)) {
+      if (typeof base !== "string") return this.use("/", base, ...fns);
+      if (base !== "/") {
+        let slashAdded = false;
+        fns.unshift((req, _, next) => {
+          req.url = req.url.substring(base.length);
+          if ((slashAdded = req.url[0] !== "/")) req.url = "/" + req.url;
+          next();
+        });
+        fns.push(
+          (req, _, next) =>
+            (req.url = base + (slashAdded ? req.url.substring(1) : req.url)) &&
+            next()
+        );
+      }
     }
+    
     _use(base, ...fns.map(mount));
     return nc;
   };

@@ -173,6 +173,23 @@ describe("use()", () => {
     await request(app).get("/this/that/these/those").expect("ok");
   });
 
+  it("match path by RegExp", async () => {
+    const handler = nc();
+    handler.use(new RegExp("/this|/that"), (req, res, next) => {
+      req.ok = "ok";
+      next();
+    });
+    handler.get((req, res) => {
+      res.end(req.ok || "no");
+    });
+    const app = createServer(handler);
+    await request(app).get("/this/that/these/those").expect("ok");
+    await request(app).get("/this").expect("ok");
+    await request(app).get("/that/this/these/those").expect("ok");
+    await request(app).get("/that").expect("ok");
+    await request(app).get("/some/path").expect("no");
+  });
+
   it("mount subapp", () => {
     const handler2 = nc();
     handler2.use((req, res, next) => {
