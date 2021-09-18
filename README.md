@@ -33,7 +33,15 @@ yarn add next-connect
 // pages/api/hello.js
 import nc from "next-connect";
 
-const handler = nc()
+const handler = nc({
+  onError: (err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).end("Something broke!");
+  },
+  onNoMatch: (req, res, next) => {
+    res.status(404).end("Page is not found");
+  },
+})
   .use(someMiddleware())
   .get((req, res) => {
     res.send("Hello world");
@@ -51,7 +59,7 @@ const handler = nc()
 export default handler;
 ```
 
-For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` *and* `express.Router()` with `nc()` and follow the [match multiple routes recipe](#catch-all).
+For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` _and_ `express.Router()` with `nc()` and follow the [match multiple routes recipe](#catch-all).
 
 For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
 
@@ -93,11 +101,13 @@ The API is similar to [Express.js](https://github.com/expressjs/express) with se
 
 It is more like good ol' [connect](https://www.npmjs.com/package/connect) (hence the name) with method routing.
 
-### nc(options)
+### nc(options?)
 
 Initialize an instance of `next-connect`.
 
 #### options.onError
+
+**Important:** It is strongly recommended to set this option, since the default does not report the error to the terminal.
 
 Accepts a function as a catch-all error handler; executed whenever a middleware throws an error.
 By default, it responds with status code `500` and an error message if any.
@@ -105,6 +115,7 @@ By default, it responds with status code `500` and an error message if any.
 ```javascript
 function onError(err, req, res, next) {
   logger.log(err);
+  // OR: console.error(err);
 
   res.status(500).end(err.toString());
   // OR: you may want to continue
@@ -213,7 +224,7 @@ However, since Next.js already handles routing (including dynamic routes), we of
 
 ### .all(pattern, ...fns)
 
-Same as [.METHOD](#methodpattern-fns) but accepts *any* methods.
+Same as [.METHOD](#methodpattern-fns) but accepts _any_ methods.
 
 ### .run(req, res)
 
@@ -301,7 +312,7 @@ export async function getServerSideProps({ req, res }) {
 <details id="catch-all">
 <summary>Match multiple routes</summary>
 
-If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route. 
+If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route.
 
 If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
 
