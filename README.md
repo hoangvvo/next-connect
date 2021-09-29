@@ -164,7 +164,7 @@ handler.get("/users/:userId/posts/:postId", (req, res) => {
 
 ### .use(base, ...fn)
 
-`base` (optional) - match all route to the right of `base` or match all if omitted.
+`base` (optional) - match all route to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
 
 `fn`(s) are functions of `(req, res[, next])` **or** an instance of `next-connect`, where it will act as a sub application.
 
@@ -221,6 +221,8 @@ handler.get((req, res, next) => {
 ```
 
 However, since Next.js already handles routing (including dynamic routes), we often omit `pattern` in `.METHOD`.
+
+**Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). eg: having a `handler.put("/api/foo")` inside `page/api/index.js` *does not* serve that handler at `/api/foo`.
 
 ### .all(pattern, ...fns)
 
