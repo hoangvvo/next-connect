@@ -107,6 +107,24 @@ describe(".METHOD", () => {
     requestPromises.push(request(app).get("/yes").expect(404));
     return Promise.all(requestPromises);
   });
+
+  it("match by RegExp", () => {
+    const handler = nc();
+    METHODS.forEach((method) => {
+      handler[method](new RegExp(`/${method}`), (req, res) => res.end(method));
+    });
+    const app = createServer(handler);
+    const requestPromises = [];
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)
+          [method](`/${method}`)
+          .expect(method !== "head" ? method : undefined)
+      );
+    });
+    requestPromises.push(request(app).get("/yes").expect(404));
+    return Promise.all(requestPromises);
+  });
 });
 
 describe("all()", () => {
@@ -128,6 +146,24 @@ describe("all()", () => {
   it("match by path of any methods", () => {
     const handler = nc();
     handler.all("/all", (req, res) => res.end("all"));
+    const requestPromises = [];
+    const app = createServer(handler);
+    METHODS.forEach((method) => {
+      requestPromises.push(request(app)[method](`/${method}`).expect(404));
+    });
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)
+          [method](`/all`)
+          .expect(method !== "head" ? "all" : undefined)
+      );
+    });
+    return Promise.all(requestPromises);
+  });
+
+  it("match by RegExp of any methods", () => {
+    const handler = nc();
+    handler.all(new RegExp("/all"), (req, res) => res.end("all"));
     const requestPromises = [];
     const app = createServer(handler);
     METHODS.forEach((method) => {
