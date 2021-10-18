@@ -21,7 +21,7 @@ export default function factory({
   const _find = Trouter.prototype.find.bind(nc);
   const _add = Trouter.prototype.add.bind(nc);
   function add(method, base, ...fns) {
-    if (typeof base !== "string" && !(base instanceof RegExp)) return add(method, "*", base, ...fns);
+    if (typeof base === "function") return add(method, "*", base, ...fns);
     _add(method, base, ...fns);
     return nc;
   }
