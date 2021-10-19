@@ -107,6 +107,24 @@ describe(".METHOD", () => {
     requestPromises.push(request(app).get("/yes").expect(404));
     return Promise.all(requestPromises);
   });
+
+  it("match by RegExp", () => {
+    const handler = nc();
+    METHODS.forEach((method) => {
+      handler[method](new RegExp(`/${method}`), (req, res) => res.end(method));
+    });
+    const app = createServer(handler);
+    const requestPromises = [];
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)
+          [method](`/${method}`)
+          .expect(method !== "head" ? method : undefined)
+      );
+    });
+    requestPromises.push(request(app).get("/yes").expect(404));
+    return Promise.all(requestPromises);
+  });
 });
 
 describe("all()", () => {
@@ -128,6 +146,24 @@ describe("all()", () => {
   it("match by path of any methods", () => {
     const handler = nc();
     handler.all("/all", (req, res) => res.end("all"));
+    const requestPromises = [];
+    const app = createServer(handler);
+    METHODS.forEach((method) => {
+      requestPromises.push(request(app)[method](`/${method}`).expect(404));
+    });
+    METHODS.forEach((method) => {
+      requestPromises.push(
+        request(app)
+          [method](`/all`)
+          .expect(method !== "head" ? "all" : undefined)
+      );
+    });
+    return Promise.all(requestPromises);
+  });
+
+  it("match by RegExp of any methods", () => {
+    const handler = nc();
+    handler.all(new RegExp("/all"), (req, res) => res.end("all"));
     const requestPromises = [];
     const app = createServer(handler);
     METHODS.forEach((method) => {
@@ -171,6 +207,23 @@ describe("use()", () => {
     const app = createServer(handler);
     await request(app).get("/some/path").expect("no");
     await request(app).get("/this/that/these/those").expect("ok");
+  });
+
+  it("match path by RegExp", async () => {
+    const handler = nc();
+    handler.use(new RegExp("/this|/that"), (req, res, next) => {
+      req.ok = "ok";
+      next();
+    });
+    handler.get((req, res) => {
+      res.end(req.ok || "no");
+    });
+    const app = createServer(handler);
+    await request(app).get("/this/that/these/those").expect("ok");
+    await request(app).get("/this").expect("ok");
+    await request(app).get("/that/this/these/those").expect("ok");
+    await request(app).get("/that").expect("ok");
+    await request(app).get("/some/path").expect("no");
   });
 
   it("mount subapp", () => {
