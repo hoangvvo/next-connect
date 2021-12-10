@@ -67,7 +67,9 @@ export default function factory({
     if (attachParams) req.params = params;
     let i = 0;
     const len = handlers.length;
-    const loop = async (next) => handlers[i++](req, res, next);
+    const loop = async (next) => Promise.resolve(handlers[i++](req, res, next))
+      .then(() => isResSent(res) && done())
+      .catch(next);
     const next = (err) => {
       i < len
         ? err
