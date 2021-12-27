@@ -25,84 +25,84 @@ declare module "next-connect" {
   interface NextConnect<Req, Res> {
     (req: Req, res: Res): Promise<void>;
 
-    use<ReqExt = {}, ResExt = {}>(
-      ...handlers: Middleware<Req & ReqExt, Res & ResExt>[]
+    use<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: Middleware<ReqExt, ResExt>[]
     ): this;
-    use<ReqExt = {}, ResExt = {}>(
+    use<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: Middleware<Req & ReqExt, Res & ResExt>[]
+      ...handlers: Middleware<ReqExt, ResExt>[]
     ): this;
 
-    all<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    all<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    all<ReqExt = {}, ResExt = {}>(
+    all<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    get<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    get<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    get<ReqExt = {}, ResExt = {}>(
+    get<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    head<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    head<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    head<ReqExt = {}, ResExt = {}>(
+    head<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    post<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    post<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    post<ReqExt = {}, ResExt = {}>(
+    post<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    put<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    put<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    put<ReqExt = {}, ResExt = {}>(
+    put<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    delete<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    delete<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    delete<ReqExt = {}, ResExt = {}>(
+    delete<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    options<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    options<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    options<ReqExt = {}, ResExt = {}>(
+    options<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    trace<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    trace<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    trace<ReqExt = {}, ResExt = {}>(
+    trace<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
-    patch<ReqExt = {}, ResExt = {}>(
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+    patch<ReqExt extends Req = Req, ResExt extends Res = Res>(
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
-    patch<ReqExt = {}, ResExt = {}>(
+    patch<ReqExt extends Req = Req, ResExt extends Res = Res>(
       pattern: string | RegExp,
-      ...handlers: RequestHandler<Req & ReqExt, Res & ResExt>[]
+      ...handlers: RequestHandler<ReqExt, ResExt>[]
     ): this;
 
     run(req: Req, res: Res): Promise<void>;
