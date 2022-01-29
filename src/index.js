@@ -68,13 +68,11 @@ export default function factory({
     let i = 0;
     const len = handlers.length;
     const loop = async (next) => handlers[i++](req, res, next);
-    const next = (err) => {
-      i < len
-        ? err
-          ? onError(err, req, res, next)
-          : loop(next).catch(next)
-        : done && done(err);
-    };
+    const next = (err) => i < len
+      ? err
+        ? onError(err, req, res, next)
+        : loop(next).catch(next)
+      : done && done(err);
     next();
   };
   return nc;
