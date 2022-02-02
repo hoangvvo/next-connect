@@ -1,16 +1,16 @@
 declare module "next-connect" {
   import { IncomingMessage, ServerResponse } from "http";
 
-  type NextHandler = (err?: any) => void;
-  type Middleware<Req, Res> = NextConnect<Req, Res> | RequestHandler<Req, Res>;
+  export type NextHandler = (err?: any) => void;
+  export type Middleware<Req, Res> = NextConnect<Req, Res> | RequestHandler<Req, Res>;
 
-  type RequestHandler<Req, Res> = (
+  export type RequestHandler<Req, Res> = (
     req: Req,
     res: Res,
     next: NextHandler
   ) => any | Promise<any>;
 
-  type ErrorHandler<Req, Res> = (
+  export type ErrorHandler<Req, Res> = (
     err: any,
     req: Req,
     res: Res,
