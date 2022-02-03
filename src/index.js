@@ -69,7 +69,7 @@ export default function factory({
     const len = handlers.length;
     const loop = async (next) => {
       try {
-        await Promise.resolve(handlers[i++](req, res, next)); 
+        await handlers[i++](req, res, next);
         isResSent(res) && done();
       } catch (err) {
         next(err);
