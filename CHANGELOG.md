@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.1
+
+- Bump deps and switch to NPM
+- typescript: added export for types (#176)
+
+## 0.11.0
+
+- Allow regular expressions to be used for route. (#157)
+
 ## 0.10.2
 
 - Export the options interface (#152)
