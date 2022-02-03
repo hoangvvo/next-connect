@@ -136,6 +136,8 @@ handler
   });
 ```
 
+**Note:** If the instance is used as a sub-application, this option is ignored.
+
 #### options.onNoMatch
 
 Accepts a function of `(req, res)` as a handler when no route is matched.
@@ -148,6 +150,8 @@ function onNoMatch(req, res) {
 
 const handler = nc({ onNoMatch });
 ```
+
+**Note:** If the instance is used as a sub-application, this option is ignored.
 
 #### options.attachParams
 
