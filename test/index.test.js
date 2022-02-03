@@ -64,12 +64,6 @@ describe("nc()", () => {
   it("is a function with two argument", () => {
     assert(typeof nc() === "function" && nc().length === 2);
   });
-
-  it("returns a promise", () => {
-    nc()({}, { end: () => null }).then(() => {
-      /* no-op */
-    });
-  });
 });
 
 describe(".METHOD", () => {
@@ -291,6 +285,25 @@ describe("use()", () => {
     // undo added slash
     await request(app).get("/sub?").expect("/sub?");
   });
+
+  it("use parent onError and onNoMatch", async () => {
+    const handler2 = nc({
+      onError(err, req, res) {
+        res.end("oops!");
+      },
+    });
+    handler2.get("/foo", () => {
+      throw new Error("chow!");
+    });
+    const handler = nc({
+      onError(err, req, res) {
+        res.end("ka-" + err.message);
+      },
+    });
+    handler.use("/sub", handler2);
+    const app = createServer(handler);
+    await request(app).get("/sub/foo").expect("ka-chow!");
+  });
 });
 
 describe("handle()", () => {
@@ -349,6 +362,29 @@ describe("run()", () => {
       }
     });
     return request(app).get("/").expect("Error: error :(");
+  });
+
+  it("reject if there is an error with penultimate middleware", () => {
+    const handler = nc();
+    handler.use(
+      (req, res, next) => {
+        next(Error("error :("));
+      },
+      (req, res) => {
+        res.end("good");
+      }
+    );
+    const app = createServer(async (req, res) => {
+      try {
+        await handler.run(req, res);
+        res.end("good");
+      } catch (e) {
+        // Don't use same text as the error otherwise the default error
+        // handler may cause the test to pass.
+        res.end("bad");
+      }
+    });
+    return request(app).get("/").expect("bad");
   });
 });
 

@@ -106,8 +106,6 @@ declare module "next-connect" {
     ): this;
 
     run(req: Req, res: Res): Promise<void>;
-
-    handle(req: Req, res: Res, done: NextHandler): void;
   }
 
   export default function <Req = IncomingMessage, Res = ServerResponse>(

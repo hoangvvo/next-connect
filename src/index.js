@@ -11,9 +11,10 @@ export default function factory({
   attachParams = false,
 } = {}) {
   function nc(req, res) {
-    return nc.run(req, res).then(
-      () => !isResSent(res) && onNoMatch(req, res),
-      (err) => onError(err, req, res)
+    nc.handle(req, res, (err, next) =>
+      err
+        ? onError(err, req, res, next)
+        : !isResSent(res) && onNoMatch(req, res)
     );
   }
   nc.routes = [];
@@ -69,11 +70,7 @@ export default function factory({
     const len = handlers.length;
     const loop = async (next) => handlers[i++](req, res, next);
     const next = (err) => {
-      i < len
-        ? err
-          ? onError(err, req, res, next)
-          : loop(next).catch(next)
-        : done && done(err);
+      i < len && !err ? loop(next).catch(next) : done(err, next);
     };
     next();
   };

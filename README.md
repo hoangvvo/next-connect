@@ -166,7 +166,10 @@ handler.get("/users/:userId/posts/:postId", (req, res) => {
 
 `base` (optional) - match all route to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
 
-`fn`(s) are functions of `(req, res[, next])` **or** an instance of `next-connect`, where it will act as a sub application.
+`fn`(s) can either be:
+
+- functions of `(req, res[, next])`
+- **or** an instance of `next-connect`, where it will act as a sub application. `onError` and `onNoMatch` of that subapp are disregarded.
 
 ```javascript
 // Mount a middleware function
@@ -222,7 +225,7 @@ handler.get((req, res, next) => {
 
 However, since Next.js already handles routing (including dynamic routes), we often omit `pattern` in `.METHOD`.
 
-**Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). eg: having a `handler.put("/api/foo")` inside `page/api/index.js` *does not* serve that handler at `/api/foo`.
+**Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). For example, having a `handler.put("/api/foo", handler)` inside `page/api/index.js` _does not_ serve that handler at `/api/foo`.
 
 ### .all(pattern, ...fns)
 
@@ -232,12 +235,19 @@ Same as [.METHOD](#methodpattern-fns) but accepts _any_ methods.
 
 Runs `req` and `res` the middleware and returns a **promise**. It will **not** render `404` on not found or `onError` on error.
 
+**Note:** You _MUST_ call `next()` in the final handler for the promise to resolve.
+
 This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
 
 ```javascript
 // page/index.js
 export async function getServerSideProps({ req, res }) {
-  const handler = nc().use(passport.initialize()).post(postMiddleware);
+  const handler = nc()
+    .use(passport.initialize())
+    .post(async (req, res, next) => {
+      await logPostRequest(req);
+      next(); // <- make sure next() is called
+    });
   try {
     await handler.run(req, res);
   } catch (e) {
