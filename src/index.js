@@ -11,11 +11,17 @@ export default function factory({
   attachParams = false,
 } = {}) {
   async function nc(req, res) {
+    let closeP;
+    if ("once" in res)
+      closeP = new Promise((resolve) =>
+        isResSent(res) ? resolve() : res.once("close", resolve)
+      );
     nc.handle(req, res, (err, next) =>
       err
         ? onError(err, req, res, () => next())
         : !isResSent(res) && onNoMatch(req, res)
     );
+    await closeP;
   }
   nc.routes = [];
   const _use = Trouter.prototype.use.bind(nc);

@@ -68,11 +68,33 @@ describe("nc()", () => {
   it("returns a resolved promise", (done) => {
     nc()
       .get((req, res, next) => {
-        next()
+        next();
       })({ method: "GET", url: "/" }, { end: () => null })
-      .then(() => {
-        done()
+      .then(done);
+  });
+
+  it("resolves after res close event", (done) => {
+    const handler = nc().get((req, res) => {
+      // minus 3 is 1
+      res.end("hello");
+      res.finished = true;
+    });
+    const app = createServer((req, res) => {
+      handler(req, res).then(done);
+    });
+    request(app).get("/").expect(200).then(() => undefined);
+  });
+
+  it("resolves immediately if res is sent", (done) => {
+    const handler = nc().get(() => {
+      /* noop */
+    });
+    const app = createServer((req, res) => {
+      res.end("quick math", () => {
+        handler(req, res).then(done);
       });
+    });
+    request(app).get("/").expect(200).then(() => undefined);
   });
 });
 
