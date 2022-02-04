@@ -10,10 +10,10 @@ export default function factory({
   onNoMatch = onerror.bind(null, { status: 404, message: "not found" }),
   attachParams = false,
 } = {}) {
-  function nc(req, res) {
+  async function nc(req, res) {
     nc.handle(req, res, (err, next) =>
       err
-        ? onError(err, req, res, next)
+        ? onError(err, req, res, () => next())
         : !isResSent(res) && onNoMatch(req, res)
     );
   }

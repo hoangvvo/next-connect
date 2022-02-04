@@ -64,6 +64,16 @@ describe("nc()", () => {
   it("is a function with two argument", () => {
     assert(typeof nc() === "function" && nc().length === 2);
   });
+
+  it("returns a resolved promise", (done) => {
+    nc()
+      .get((req, res, next) => {
+        next()
+      })({ method: "GET", url: "/" }, { end: () => null })
+      .then(() => {
+        done()
+      });
+  });
 });
 
 describe(".METHOD", () => {
@@ -307,26 +317,6 @@ describe("use()", () => {
 });
 
 describe("handle()", () => {
-  it("response with default 404 on no match", () => {
-    const handler = nc();
-    handler.post((req, res) => {
-      res.end("");
-    });
-
-    const app = createServer(handler);
-    return request(app).get("/").expect(404);
-  });
-
-  it("response with custom 404 on no match", () => {
-    function onNoMatch(req, res) {
-      res.end("");
-    }
-
-    const handler2 = nc({ onNoMatch });
-    const app = createServer(handler2);
-    return request(app).get("/").expect(200);
-  });
-
   it("call .find with pathname instead of url", () => {
     const handler = nc().get("/test", (req, res) => res.end("ok"));
     const app = createServer(handler);
@@ -452,6 +442,28 @@ describe("onError", () => {
     handler2.get(async (req, res) => res.end("ok"));
     const app = createServer(handler2);
     return request(app).get("/").expect("Something failed");
+  });
+});
+
+describe("onNoMatch", () => {
+  it("response with default 404 on no match", () => {
+    const handler = nc();
+    handler.post((req, res) => {
+      res.end("");
+    });
+
+    const app = createServer(handler);
+    return request(app).get("/").expect(404);
+  });
+
+  it("response with custom 404 on no match", () => {
+    function onNoMatch(req, res) {
+      res.end("");
+    }
+
+    const handler2 = nc({ onNoMatch });
+    const app = createServer(handler2);
+    return request(app).get("/").expect(200);
   });
 });
 
