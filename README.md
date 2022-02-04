@@ -59,6 +59,8 @@ const handler = nc({
 export default handler;
 ```
 
+**NOTE:** Make sure the response is sent or `handler()` will never resolve (unless `options.disableResponseWait` is `true`).
+
 For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` _and_ `express.Router()` with `nc()` and follow the [match multiple routes recipe](#catch-all).
 
 For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
