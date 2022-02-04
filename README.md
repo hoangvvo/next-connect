@@ -136,7 +136,10 @@ handler
   });
 ```
 
-**Note:** If the instance is used as a sub-application, this option is ignored.
+**Note:**
+
+- If the instance is used as a sub-application, this option is ignored.
+- Calling _next(err)_ or throwing error will lead to UNDEFINED behavior.
 
 #### options.onNoMatch
 
@@ -151,7 +154,10 @@ function onNoMatch(req, res) {
 const handler = nc({ onNoMatch });
 ```
 
-**Note:** If the instance is used as a sub-application, this option is ignored.
+**Note:**
+
+- If the instance is used as a sub-application, this option is ignored.
+- Throwing error will lead to UNDEFINED behavior.
 
 #### options.attachParams
 
@@ -319,6 +325,22 @@ export async function getServerSideProps({ req, res }) {
     props: {},
   };
 }
+```
+
+3/ **FORGET** to call `next()` in last middleware while using `handler.run()`:
+
+```js
+const handler = nc()
+  .use((req, res, next) => {
+    next();
+  })
+  .use((req, res) => {
+    req.foo = "bar";
+    // Not calling next() or next(err) here;
+  });
+
+// BAD: This will never finish
+await handler.run(req, res);
 ```
 
 ## Recipes
