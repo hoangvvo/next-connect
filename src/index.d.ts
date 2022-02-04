@@ -27,6 +27,7 @@ declare module "next-connect" {
     onError?: ErrorHandler<Req, Res>;
     onNoMatch?: NoMatchHandler<Req, Res>;
     attachParams?: boolean;
+    disableResponseWait?: boolean;
   }
   interface NextConnect<Req, Res> {
     (req: Req, res: Res): Promise<void>;

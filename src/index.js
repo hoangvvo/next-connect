@@ -9,10 +9,11 @@ export default function factory({
   onError = onerror,
   onNoMatch = onerror.bind(null, { status: 404, message: "not found" }),
   attachParams = false,
+  disableResponseWait = false,
 } = {}) {
   async function nc(req, res) {
     let closeP;
-    if ("once" in res)
+    if (!disableResponseWait && "once" in res)
       closeP = new Promise((resolve) => {
         res.once("close", resolve);
         if (isResSent(res)) resolve();

@@ -65,12 +65,31 @@ describe("nc()", () => {
     assert(typeof nc() === "function" && nc().length === 2);
   });
 
-  it("returns a resolved promise", (done) => {
+  it("resolves immediately if res.once does not exist", (done) => {
     nc()
       .get((req, res, next) => {
         next();
       })({ method: "GET", url: "/" }, { end: () => null })
       .then(done);
+  });
+
+  it("does not resolve if res is not closed", (done) => {
+    const handler = nc().get(() => {
+      /* noop */
+    });
+    const app = createServer((req, res) => {
+      let flag = false;
+      handler(req, res).then(() => !flag && done("must not be called"));
+      setTimeout(() => {
+        flag = true;
+        res.end();
+        done();
+      }, 50);
+    });
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
   });
 
   it("resolves after res close event", (done) => {
@@ -82,7 +101,10 @@ describe("nc()", () => {
     const app = createServer((req, res) => {
       handler(req, res).then(done);
     });
-    request(app).get("/").expect(200).then(() => undefined);
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
   });
 
   it("resolves immediately if res is sent", (done) => {
@@ -94,7 +116,27 @@ describe("nc()", () => {
         handler(req, res).then(done);
       });
     });
-    request(app).get("/").expect(200).then(() => undefined);
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
+  });
+
+  it("resolves immediately if options.disableResponseWait is true", (done) => {
+    const handler = nc({
+      disableResponseWait: true,
+    }).get(() => {
+      // minus 3 is 1
+    });
+    const app = createServer(async (req, res) => {
+      await handler(req, res);
+      res.end("foo");
+      done();
+    });
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
   });
 });
 
