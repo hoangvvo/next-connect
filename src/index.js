@@ -13,9 +13,10 @@ export default function factory({
   async function nc(req, res) {
     let closeP;
     if ("once" in res)
-      closeP = new Promise((resolve) =>
-        isResSent(res) ? resolve() : res.once("close", resolve)
-      );
+      closeP = new Promise((resolve) => {
+        res.once("close", resolve);
+        if (isResSent(res)) resolve();
+      });
     nc.handle(req, res, (err, next) =>
       err
         ? onError(err, req, res, () => next())
