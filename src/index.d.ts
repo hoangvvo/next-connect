@@ -2,7 +2,14 @@ declare module "next-connect" {
   import { IncomingMessage, ServerResponse } from "http";
 
   export type NextHandler = (err?: any) => void;
-  export type Middleware<Req, Res> = NextConnect<Req, Res> | RequestHandler<Req, Res>;
+  export type Middleware<Req, Res> =
+    | NextConnect<Req, Res>
+    | RequestHandler<Req, Res>;
+
+  export type NoMatchHandler<Req, Res> = (
+    req: Req,
+    res: Res
+  ) => any | Promise<any>;
 
   export type RequestHandler<Req, Res> = (
     req: Req,
@@ -13,14 +20,14 @@ declare module "next-connect" {
   export type ErrorHandler<Req, Res> = (
     err: any,
     req: Req,
-    res: Res,
-    next: NextHandler
+    res: Res
   ) => any | Promise<any>;
 
   export interface Options<Req, Res> {
     onError?: ErrorHandler<Req, Res>;
-    onNoMatch?: RequestHandler<Req, Res>;
+    onNoMatch?: NoMatchHandler<Req, Res>;
     attachParams?: boolean;
+    disableResponseWait?: boolean;
   }
   interface NextConnect<Req, Res> {
     (req: Req, res: Res): Promise<void>;

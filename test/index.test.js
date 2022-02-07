@@ -64,6 +64,80 @@ describe("nc()", () => {
   it("is a function with two argument", () => {
     assert(typeof nc() === "function" && nc().length === 2);
   });
+
+  it("resolves immediately if res.once does not exist", (done) => {
+    nc()
+      .get((req, res, next) => {
+        next();
+      })({ method: "GET", url: "/" }, { end: () => null })
+      .then(done);
+  });
+
+  it("does not resolve if res is not finshed", (done) => {
+    const handler = nc().get(() => {
+      /* noop */
+    });
+    const app = createServer((req, res) => {
+      let flag = false;
+      handler(req, res).then(() => !flag && done("must not be called"));
+      setTimeout(() => {
+        flag = true;
+        res.end();
+        done();
+      }, 50);
+    });
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
+  });
+
+  it("resolves after res 'finish' event", (done) => {
+    const handler = nc().get((req, res) => {
+      // minus 3 is 1
+      res.end("hello");
+    });
+    const app = createServer((req, res) => {
+      handler(req, res).then(done);
+    });
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
+  });
+
+  it("resolves immediately if res is already sent", (done) => {
+    const handler = nc().get(() => {
+      /* noop */
+    });
+    const app = createServer((req, res) => {
+      res.end("quick math", () => {
+        assert(res.finished || res.headersSent, "res.finished must be true")
+        handler(req, res).then(done);
+      });
+    });
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
+  });
+
+  it("resolves immediately if options.disableResponseWait is true", (done) => {
+    const handler = nc({
+      disableResponseWait: true,
+    }).get(() => {
+      // minus 3 is 1
+    });
+    const app = createServer(async (req, res) => {
+      await handler(req, res);
+      res.end("foo");
+      done();
+    });
+    request(app)
+      .get("/")
+      .expect(200)
+      .then(() => undefined);
+  });
 });
 
 describe(".METHOD", () => {
@@ -307,26 +381,6 @@ describe("use()", () => {
 });
 
 describe("handle()", () => {
-  it("response with default 404 on no match", () => {
-    const handler = nc();
-    handler.post((req, res) => {
-      res.end("");
-    });
-
-    const app = createServer(handler);
-    return request(app).get("/").expect(404);
-  });
-
-  it("response with custom 404 on no match", () => {
-    function onNoMatch(req, res) {
-      res.end("");
-    }
-
-    const handler2 = nc({ onNoMatch });
-    const app = createServer(handler2);
-    return request(app).get("/").expect(200);
-  });
-
   it("call .find with pathname instead of url", () => {
     const handler = nc().get("/test", (req, res) => res.end("ok"));
     const app = createServer(handler);
@@ -452,6 +506,28 @@ describe("onError", () => {
     handler2.get(async (req, res) => res.end("ok"));
     const app = createServer(handler2);
     return request(app).get("/").expect("Something failed");
+  });
+});
+
+describe("onNoMatch", () => {
+  it("response with default 404 on no match", () => {
+    const handler = nc();
+    handler.post((req, res) => {
+      res.end("");
+    });
+
+    const app = createServer(handler);
+    return request(app).get("/").expect(404);
+  });
+
+  it("response with custom 404 on no match", () => {
+    function onNoMatch(req, res) {
+      res.end("");
+    }
+
+    const handler2 = nc({ onNoMatch });
+    const app = createServer(handler2);
+    return request(app).get("/").expect(200);
   });
 });
 

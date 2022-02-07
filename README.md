@@ -59,6 +59,8 @@ const handler = nc({
 export default handler;
 ```
 
+**NOTE:** Make sure the response is sent or `handler()` will never resolve (unless `options.disableResponseWait` is `true`).
+
 For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` _and_ `express.Router()` with `nc()` and follow the [match multiple routes recipe](#catch-all).
 
 For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
@@ -101,7 +103,7 @@ The API is similar to [Express.js](https://github.com/expressjs/express) with se
 
 It is more like good ol' [connect](https://www.npmjs.com/package/connect) (hence the name) with method routing.
 
-### nc(options?)
+### handler = nc(options?)
 
 Initialize an instance of `next-connect`.
 
@@ -136,7 +138,7 @@ handler
   });
 ```
 
-**Note:** If the instance is used as a sub-application, this option is ignored.
+**Note:** This option is ignored if `handler` is used as a sub app or when `handler.run()` is used.
 
 #### options.onNoMatch
 
@@ -151,7 +153,7 @@ function onNoMatch(req, res) {
 const handler = nc({ onNoMatch });
 ```
 
-**Note:** If the instance is used as a sub-application, this option is ignored.
+**Note:** This option is ignored if `handler` is used as a sub app or when `handler.run()` is used.
 
 #### options.attachParams
 
@@ -166,7 +168,18 @@ handler.get("/users/:userId/posts/:postId", (req, res) => {
 });
 ```
 
-### .use(base, ...fn)
+### options.disableResponseWait
+
+Passing `true` will disable waiting for the response to end (that is, after `res.end()` is called) before resolving the `handler(req, res)` promise.
+
+```js
+await handler(req, res);
+// will not reach here unless res.end() has been called or options.disableResponseWait is true.
+```
+
+**Note:** This option is ignored if `handler` is used as a sub app or when `handler.run()` is used.
+
+### handler.use(base, ...fn)
 
 `base` (optional) - match all route to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
 
@@ -203,7 +216,7 @@ handler
 handler.use(passport.initialize());
 ```
 
-### .METHOD(pattern, ...fns)
+### handler.METHOD(pattern, ...fns)
 
 `METHOD` is a HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
 
@@ -231,11 +244,11 @@ However, since Next.js already handles routing (including dynamic routes), we of
 
 **Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). For example, having a `handler.put("/api/foo", handler)` inside `page/api/index.js` _does not_ serve that handler at `/api/foo`.
 
-### .all(pattern, ...fns)
+### handler.all(pattern, ...fns)
 
 Same as [.METHOD](#methodpattern-fns) but accepts _any_ methods.
 
-### .run(req, res)
+### handler.run(req, res)
 
 Runs `req` and `res` the middleware and returns a **promise**. It will **not** render `404` on not found or `onError` on error.
 
@@ -315,6 +328,20 @@ const handler = nc()
 
 export async function getServerSideProps({ req, res }) {
   await handler.run(req, res);
+  return {
+    props: {},
+  };
+}
+```
+
+3. **DO NOT** use `handler(req, res)` directly in `getServerSideProps`.
+
+```js
+// page/index.js
+const handler = nc().use(foo).use(bar);
+
+export async function getServerSideProps({ req, res }) {
+  await handler(req, res); // BAD: You must you handler.run(req, res);
   return {
     props: {},
   };

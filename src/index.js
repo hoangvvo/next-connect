@@ -9,13 +9,21 @@ export default function factory({
   onError = onerror,
   onNoMatch = onerror.bind(null, { status: 404, message: "not found" }),
   attachParams = false,
+  disableResponseWait = false,
 } = {}) {
-  function nc(req, res) {
+  async function nc(req, res) {
+    let finishP;
+    if (!disableResponseWait && "once" in res)
+      finishP = new Promise((resolve) => {
+        res.once("finish", resolve);
+        if (isResSent(res)) resolve();
+      });
     nc.handle(req, res, (err, next) =>
       err
-        ? onError(err, req, res, next)
+        ? onError(err, req, res, () => next())
         : !isResSent(res) && onNoMatch(req, res)
     );
+    await finishP;
   }
   nc.routes = [];
   const _use = Trouter.prototype.use.bind(nc);
