@@ -12,9 +12,9 @@ export default function factory({
   disableResponseWait = false,
 } = {}) {
   async function nc(req, res) {
-    let closeP;
+    let finishP;
     if (!disableResponseWait && "once" in res)
-      closeP = new Promise((resolve) => {
+      finishP = new Promise((resolve) => {
         res.once("finish", resolve);
         if (isResSent(res)) resolve();
       });
@@ -23,7 +23,7 @@ export default function factory({
         ? onError(err, req, res, () => next())
         : !isResSent(res) && onNoMatch(req, res)
     );
-    await closeP;
+    await finishP;
   }
   nc.routes = [];
   const _use = Trouter.prototype.use.bind(nc);
