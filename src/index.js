@@ -15,7 +15,7 @@ export default function factory({
     let closeP;
     if (!disableResponseWait && "once" in res)
       closeP = new Promise((resolve) => {
-        res.once("close", resolve);
+        res.once("finish", resolve);
         if (isResSent(res)) resolve();
       });
     nc.handle(req, res, (err, next) =>

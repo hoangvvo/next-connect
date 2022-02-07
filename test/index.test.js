@@ -73,7 +73,7 @@ describe("nc()", () => {
       .then(done);
   });
 
-  it("does not resolve if res is not closed", (done) => {
+  it("does not resolve if res is not finshed", (done) => {
     const handler = nc().get(() => {
       /* noop */
     });
@@ -92,11 +92,10 @@ describe("nc()", () => {
       .then(() => undefined);
   });
 
-  it("resolves after res close event", (done) => {
+  it("resolves after res 'finish' event", (done) => {
     const handler = nc().get((req, res) => {
       // minus 3 is 1
       res.end("hello");
-      res.finished = true;
     });
     const app = createServer((req, res) => {
       handler(req, res).then(done);
@@ -107,12 +106,13 @@ describe("nc()", () => {
       .then(() => undefined);
   });
 
-  it("resolves immediately if res is sent", (done) => {
+  it("resolves immediately if res is already sent", (done) => {
     const handler = nc().get(() => {
       /* noop */
     });
     const app = createServer((req, res) => {
       res.end("quick math", () => {
+        assert(res.finished || res.headersSent, "res.finished must be true")
         handler(req, res).then(done);
       });
     });
