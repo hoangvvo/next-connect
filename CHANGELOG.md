@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12.1
+
+- breaking: flow change: handle() does not use onError (ad857bedb0996312ad3a5ea966ce3a60417429a6)
+- fix: make sure handler is resolvable (#178)
+
 ## 0.11.1
 
 - Bump deps and switch to NPM
