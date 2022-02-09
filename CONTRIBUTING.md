@@ -44,12 +44,11 @@ The steps to submit a PR are:
 
 ### Javascript style
 
-`next-connect` follows [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript). Please run `npm run lint` and fix any linting warnings.
+Please run `npm run lint` and fix any linting warnings.
 
 ### Commit message
 
 - Use the present tense and imperative mood ("Add feature" instead of "Adds feature" or "Added feature")
-- Consider starting the commit message with an applicable emoji (ex. [gitmoji](https://gitmoji.carloscuesta.me)) for a more beautiful world :rainbow:.
 
 :heart: Thank you,
 Hoang Vo
