@@ -20,7 +20,8 @@ declare module "next-connect" {
   export type ErrorHandler<Req, Res> = (
     err: any,
     req: Req,
-    res: Res
+    res: Res,
+    next: NextHandler
   ) => any | Promise<any>;
 
   export interface Options<Req, Res> {
