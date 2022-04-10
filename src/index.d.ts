@@ -34,6 +34,9 @@ declare module "next-connect" {
     (req: Req, res: Res): Promise<void>;
 
     use<ReqExt = {}, ResExt = {}>(
+      handlers: Middleware<Req & ReqExt, Res & ResExt>[]
+    ): this;
+    use<ReqExt = {}, ResExt = {}>(
       ...handlers: Middleware<Req & ReqExt, Res & ResExt>[]
     ): this;
     use<ReqExt = {}, ResExt = {}>(

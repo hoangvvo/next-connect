@@ -35,6 +35,7 @@ export default function factory({
     return nc;
   }
   nc.use = function use(base, ...fns) {
+    if (Array.isArray(base)) return this.use("/", ...base);
     if (typeof base === "function") return this.use("/", base, ...fns);
     if (typeof base === "string" && base !== "/") {
       let slashAdded = false;

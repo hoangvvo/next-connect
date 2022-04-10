@@ -294,6 +294,22 @@ describe("use()", () => {
     await request(app).get("/some/path").expect("no");
   });
 
+  it("use accepts an array of middleware", async () => {
+    const handler = nc();
+    handler.use([(req, res, next) => {
+      req.ok1 = "ok1";
+      next();
+    },(req, res, next) => {
+      req.ok2 = "ok2";
+      next();
+    }]);
+    handler.get((req, res) => {
+      res.end(`${req.ok1}-${req.ok2}` || "no");
+    });
+    const app = createServer(handler);
+    await request(app).get("/some/path").expect("ok1-ok2");
+  });
+
   it("mount subapp", () => {
     const handler2 = nc();
     handler2.use((req, res, next) => {
