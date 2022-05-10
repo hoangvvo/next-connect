@@ -341,7 +341,7 @@ export async function getServerSideProps({ req, res }) {
 const handler = nc().use(foo).use(bar);
 
 export async function getServerSideProps({ req, res }) {
-  await handler(req, res); // BAD: You must you handler.run(req, res);
+  await handler(req, res); // BAD: You must call handler.run(req, res);
   return {
     props: {},
   };
