@@ -25,9 +25,7 @@ jobs:
       - run: npm run test
       - run: npm run coverage
 
-      - run: npm install --save-dev rollup
-      - run: npm run build
-      - run: npm run test-import
+      - run: npm run build && npm run test-import
 
       - codecov/upload:
           file: 'coverage.lcov'

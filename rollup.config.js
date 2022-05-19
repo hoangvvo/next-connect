@@ -1,7 +1,9 @@
+import copy from "rollup-plugin-copy";
+
 /**
  * @type {import('rollup').RollupOptions}
  */
- const config = {
+const config = {
   input: "src/index.js",
   output: [
     {
@@ -14,7 +16,12 @@
       exports: "default",
     },
   ],
-  external: ["trouter"]
+  external: ["trouter"],
+  plugins: [
+    copy({
+      targets: [{ src: "src/index.d.ts", dest: "dist" }],
+    }),
+  ],
 };
 
 export default config;
