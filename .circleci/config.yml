@@ -14,16 +14,18 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: yarn install
+      - run: npm ci
 
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
-      - run: yarn lint
-      - run: yarn test
-      - run: yarn coverage
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run coverage
+
+      - run: npm run build && npm run test-import
 
       - codecov/upload:
           file: 'coverage.lcov'
