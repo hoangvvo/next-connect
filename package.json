@@ -34,7 +34,7 @@
     "build": "npm run build:esm && npm run build:commonjs && npm run build:types",
     "test": "c8 tap",
     "prepublishOnly": "npm run clean && npm run test && npm run build",
-    "coverage": "c8 report --reporter=text-lcov > coverage.lcov",
+    "coverage": "c8 report --reporter=lcov",
     "lint": "eslint ./src --ext json,ts --ignore-path .gitignore",
     "format": "prettier . -w --ignore-path ./.gitignore",
     "clean": "rm -rf ./dist"
