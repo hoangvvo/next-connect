@@ -10,7 +10,6 @@
     "connect"
   ],
   "type": "module",
-  "module": "dist/esm/index.js",
   "files": [
     "dist"
   ],
@@ -25,6 +24,7 @@
     }
   },
   "main": "./dist/commonjs/index.cjs",
+  "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
   "sideEffects": false,
   "scripts": {
@@ -72,6 +72,6 @@
     "coverage": false
   },
   "dependencies": {
-    "regexparam": "^2.0.0"
+    "regexparam": "^2.0.1"
   }
 }
