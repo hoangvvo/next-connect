@@ -7,13 +7,15 @@
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The smol method routing and middleware for [Next.js](https://nextjs.org/) (also works in [other frameworks](#using-in-other-frameworks)). Powered by [trouter](https://github.com/lukeed/trouter).
+The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) (also works in many other frameworks).
+
+[Examples](./examples/)
 
 ## Features
 
 - [Koa](https://koajs.com/)-like Async middleware
-- Lightweight => Suitable for serverless environment.
-- 5x faster than Express.js with no overhead
+- Lightweight => Suitable for serverless environment
+- 5x faster than Express.js with no overhead. Compatible with Express.js via [a wrapper](#expressjs-compatibility).
 - Works with async handlers (with error catching)
 - TypeScript support
 
@@ -62,10 +64,11 @@ router
     async (req, res, next) => {
       // You may want to pass in NextApiRequest & { isLoggedIn: true }
       // in createRouter generics to define this extra property
-      if (req.isLoggedIn) throw new Error("thrown stuff will be caught");
+      if (!req.isLoggedIn) throw new Error("thrown stuff will be caught");
+      // go to the next in chain
       return next();
     },
-    async () => {
+    async (req, res) => {
       const user = await updateUser(req.body.user);
       res.json({ user });
     }
@@ -86,8 +89,18 @@ export default router.handler({
 
 ### Next.js getServerSideProps
 
-```javascript
+```jsx
 // page/users/[id].js
+
+export default function Page({ user, updated }) {
+  return (
+    <div>
+      {updated && <p>User has been updated</p>}
+      <div>{JSON.stringify(user)}</div>
+      <form method="POST">{/* User update form */}</form>
+    </div>
+  );
+}
 
 export async function getServerSideProps({ req, res }) {
   const router = createRouter()
@@ -196,13 +209,15 @@ function onError(err, req, res, next) {
   logger.log(err);
   // OR: console.error(err);
 
-  res.status(500).end(err.toString());
+  res.status(500).end("Internal server error");
   // OR: you may want to continue
   next();
 }
 
 export default router.handler({ onError });
 ```
+
+**Note:** exposing the error stack by default is a security risk, consider define a custom one like above to mitigate the risk.
 
 **options.onNoMatch**
 
@@ -385,6 +400,26 @@ export default router.handler();
 ```
 
 While this allows quick migration from Express.js, consider seperating routes into different files (`/api/user/[userId].js`, `/api/hello.js`) in the future.
+
+</details>
+
+### Express.js Compatibility
+
+<details id="catch-all">
+<summary>Match multiple routes</summary>
+
+Express middleware are not built around promises but callbacks. This prevents in from playing well in `next-connect` model. Understand the way express middleware works, which is by calling the `next(err?)`, we can build a promisify wrapper like below:
+
+```js
+const expressMiddelwareWrapper = (middleware) => {
+  return (req, res, next) => {
+    return new Promise((resolve, reject) => {
+      middleware(req, res, (err) => (err ? reject(err) : resolve()));
+    });
+    return next();
+  };
+};
+```
 
 </details>
 
