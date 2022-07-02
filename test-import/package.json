@@ -1,9 +1,0 @@
-{
-  "name": "test-import",
-  "scripts": {
-    "start": "node index.cjs && node index.mjs"
-  },
-  "dependencies": {
-    "next-connect": "file:.."
-  }
-}

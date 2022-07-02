@@ -1,18 +1,14 @@
 {
+  "extends": "@tsconfig/node14/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "module": "ESNext",
-    "lib": ["ES2018"],
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "isolatedModules": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
   },
-  "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["./src/**/*"],
+  "ts-node": {
+    "transpileOnly": true,
+    "esm": true,
+    "files": true
+  }
 }
