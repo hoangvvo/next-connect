@@ -7,9 +7,7 @@
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 [![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) (also works in many other frameworks).
-
-[Examples](./examples/)
+The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) and many other frameworks.
 
 ## Features
 
@@ -22,12 +20,12 @@ The promise-based method routing and middleware layer for [Next.js](https://next
 ## Installation
 
 ```sh
-npm install next-connect
+npm install next-connect@next
 ```
 
 ## Usage
 
-Although `next-connect` is originally written for Next.js, it can be used in other places such as [http server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener), [Vercel](https://vercel.com/docs/concepts/functions/serverless-functions). See [Using in other frameworks](#using-in-other-frameworks).
+Although `next-connect` is initially written for Next.js, it can be used in [http server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener), [Vercel](https://vercel.com/docs/concepts/functions/serverless-functions). See [Examples](./examples/) for more integrations.
 
 See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more.
 
@@ -91,6 +89,7 @@ export default router.handler({
 
 ```jsx
 // page/users/[id].js
+import { createRouter } from "next-connect";
 
 export default function Page({ user, updated }) {
   return (
@@ -102,29 +101,32 @@ export default function Page({ user, updated }) {
   );
 }
 
+const router = createRouter()
+  .use(async (req, res, next) => {
+    logRequest(req);
+    return next();
+  })
+  .get(async (req, res) => {
+    const user = await getUser(req.params.id);
+    if (!user) {
+      // https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props#notfound
+      return { props: { notFound: true } };
+    }
+    return {
+      props: { user, updated: true },
+    };
+  })
+  .post(async (req, res) => {
+    const user = await updateUser(req);
+    return {
+      props: { user, updated: true },
+    };
+  });
+
 export async function getServerSideProps({ req, res }) {
-  const router = createRouter()
-    .use(async (req, res, next) => {
-      logRequest(req);
-      return next();
-    })
-    .get(async (req, res) => {
-      const user = await getUser(req.params.id);
-      if (!user) {
-        // https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props#notfound
-        return { props: { notFound: true } };
-      }
-      return {
-        props: { user, updated: true },
-      };
-    })
-    .post(async (req, res) => {
-      const user = await updateUser(req);
-      return {
-        props: { user, updated: true },
-      };
-    });
   try {
+    // we await here so that the error can be caught below
+    // rather than propagate to the outer layer
     return await router.run(req, res);
   } catch (e) {
     // handle the error
@@ -143,7 +145,7 @@ Create an instance Node.js router.
 
 ### router.use(base, ...fn)
 
-`base` (optional) - match all route to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
+`base` (optional) - match all routes to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
 
 `fn`(s) can either be:
 
@@ -154,7 +156,7 @@ Create an instance Node.js router.
 // Mount a middleware function
 router.use(async (req, res, next) => {
   req.hello = "world";
-  await next(); // call to proceed to next in chain
+  await next(); // call to proceed to the next in chain
   console.log("request is done"); // call after all downstream handler has run
 });
 
@@ -164,9 +166,9 @@ router.use("/foo", fn); // Only run in /foo/**
 
 ### router.METHOD(pattern, ...fns)
 
-`METHOD` is a HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
+`METHOD` is an HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
 
-`pattern` (optional) - match all route based on [supported pattern](https://github.com/lukeed/regexparam#regexparam-) or match all if omitted.
+`pattern` (optional) - match routes based on [supported pattern](https://github.com/lukeed/regexparam#regexparam-) or match any if omitted.
 
 `fn`(s) are functions of `(req, res[, next])`.
 
@@ -205,28 +207,26 @@ Accepts a function as a catch-all error handler; executed whenever a handler thr
 By default, it responds with status code `500` and an error stack if any.
 
 ```javascript
-function onError(err, req, res, next) {
+function onError(err, req, res) {
   logger.log(err);
   // OR: console.error(err);
 
   res.status(500).end("Internal server error");
-  // OR: you may want to continue
-  next();
 }
 
 export default router.handler({ onError });
 ```
 
-**Note:** exposing the error stack by default is a security risk, consider define a custom one like above to mitigate the risk.
+**Note:** exposing the error stack by default is a security risk, consider defining a custom one like the above to mitigate the risk.
 
 **options.onNoMatch**
 
 Accepts a function of `(req, res)` as a handler when no route is matched.
-By default, it responds with `404` status and `not found` body.
+By default, it responds with a `404` status and a `Route [Method] [Url] not found` body.
 
 ```javascript
 function onNoMatch(req, res) {
-  res.status(404).end("page is not found... or is it");
+  res.status(404).end("page is not found... or is it!?");
 }
 
 export default router.handler({ onNoMatch });
@@ -234,15 +234,33 @@ export default router.handler({ onNoMatch });
 
 ### router.run(req, res)
 
-Runs `req` and `res` the middleware and returns a **promise**. It will **not** render `404` on not found or `onError` on error. It will return the last value in the chain.
+Runs `req` and `res` through the middleware chain and returns a **promise**. It will **not** call `onError` or `onNoMatch`. It resolves with the value returned from handlers.
+
+```js
+router
+  .use(async (req, res, next) => {
+    return (await next()) + 1;
+  })
+  .use(async () => {
+    return (await next()) + 2;
+  })
+  .use(async () => {
+    return 3;
+  });
+
+console.log(await router.run(req, res));
+// The above will print "6"
+```
 
 This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
 
 ## Common errors
 
+There are some pitfalls in using `next-connect`. Below are things to keep in mind to use it correctly.
+
 1. **Always** `await next()`
 
-If `next()` is not awaited, error will not be caught in async handler, leading to `UnhandledPromiseRejection`
+If `next()` is not awaited, errors will not be caught if they are thrown in async handlers, leading to `UnhandledPromiseRejection`.
 
 ```javascript
 // OK: we don't use async so no need to await
@@ -320,8 +338,8 @@ import router from "api-libs/base";
 export default router.get(y);
 ```
 
-This is because in each API Route, the same router instance is mutated, leading to undefined behaviors.
-If you want to achieve the something like that, try rewriting the base instance as a factory function to avoid reusing the same instance:
+This is because, in each API Route, the same router instance is mutated, leading to undefined behaviors.
+If you want to achieve something like that, try rewriting the base instance as a factory function to avoid reusing the same instance:
 
 ```javascript
 // api-libs/base
@@ -344,11 +362,12 @@ export default createBaseRouter().get(y);
 // page/index.js
 const handler = createRouter()
   .use((req, res) => {
-    // BAD: res.redirect is not a function (not defined in `getServerSideProps`
+    // BAD: res.redirect is not a function (not defined in `getServerSideProps`)
+    // See https://github.com/hoangvvo/next-connect/issues/194#issuecomment-1172961741 for a solution
     res.redirect("foo");
   })
   .use((req, res) => {
-    // BAD: `getServerSideProps` gives undefined behavior if we try to send response
+    // BAD: `getServerSideProps` gives undefined behavior if we try to send a response
     res.end("bar");
   });
 
@@ -384,7 +403,7 @@ export async function getServerSideProps({ req, res }) {
 
 If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route.
 
-If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
+If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch-all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
 
 ```javascript
 // pages/api/[[...slug]].js
@@ -408,17 +427,21 @@ While this allows quick migration from Express.js, consider seperating routes in
 <details id="catch-all">
 <summary>Match multiple routes</summary>
 
-Express middleware are not built around promises but callbacks. This prevents in from playing well in `next-connect` model. Understand the way express middleware works, which is by calling the `next(err?)`, we can build a promisify wrapper like below:
+Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, which is by calling the `next(err?)`, we can build a wrapper like the below:
 
 ```js
-const expressMiddelwareWrapper = (middleware) => {
-  return (req, res, next) => {
-    return new Promise((resolve, reject) => {
+import someExpressMiddleware from "some-express-middleware";
+
+const withExpressMiddleware = (middleware) => {
+  return async (req, res, next) => {
+    await new Promise((resolve, reject) => {
       middleware(req, res, (err) => (err ? reject(err) : resolve()));
     });
     return next();
   };
 };
+
+router.use(withExpressMiddleware(someExpressMiddleware));
 ```
 
 </details>
