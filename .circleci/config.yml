@@ -16,6 +16,9 @@ jobs:
       - run:
           command: npm run build
           name: Build app
+      - run:
+          command: npm run coverage
+          name: Report coverage
 
 workflows:
   build_test_coverage:
