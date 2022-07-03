@@ -1,12 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import type { GetServerSideProps, NextPage } from "next";
+import type {
+  GetServerSideProps,
+  GetServerSidePropsResult,
+  NextPage,
+} from "next";
 import { createRouter } from "next-connect";
 import ErrorPage from "next/error";
 import Head from "next/head";
 import Link from "next/link";
-import type { User } from "../../common/api";
-import { getUsers, randomId, saveUsers, validateUser } from "../../common/api";
 import styles from "../../styles/styles.module.css";
+import type { User } from "../../utils/api";
+import { getUsers, randomId, saveUsers, validateUser } from "../../utils/api";
 
 interface PageProps {
   users?: User[];
@@ -25,7 +29,7 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/gssp.tsx">
+          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/gssp-users/index.tsx">
             getServerSideProps
           </a>{" "}
           Example
@@ -71,7 +75,16 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
               Submit
             </button>
             <small style={{ marginTop: "2rem" }}>
-              You must be at least 8 years old to create a user
+              This page works without JavaScript. Try{" "}
+              <a
+                href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/javascript/disable"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "#0070f3" }}
+              >
+                disabling
+              </a>{" "}
+              it!
             </small>
           </form>
         </div>
@@ -83,10 +96,10 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
 export default UsersPage;
 
 const gsspRouter = createRouter<
-  IncomingMessage & { body?: Record<string, string | number> },
+  IncomingMessage & { body?: Record<string, string> },
   ServerResponse
 >()
-  .get((req) => {
+  .get((req): GetServerSidePropsResult<PageProps> => {
     const users = getUsers(req);
     return { props: { users } };
   })
@@ -99,31 +112,31 @@ const gsspRouter = createRouter<
         req.on("data", (chunk) => (body += chunk));
         req.on("end", () => {
           const searchParams = new URLSearchParams(body);
-          const result: Record<string, string | number> = {};
+          const result: Record<string, string> = {};
           for (const [key, value] of searchParams) {
-            if (!isNaN(parseInt(value))) {
-              result[key] = parseInt(value);
-            } else {
-              result[key] = value;
-            }
+            result[key] = value;
           }
           resolve(result);
         });
       });
       return next();
     },
-    (req, res) => {
+    (req, res): GetServerSidePropsResult<PageProps> => {
       const users = getUsers(req);
+      // parse number
       const newUser = {
         id: randomId(),
         ...req.body,
+        age: Number(req.body?.age),
       } as User;
       validateUser(newUser);
       users.push(newUser);
       saveUsers(res, users);
       return {
-        props: {
-          users,
+        redirect: {
+          destination: "/gssp-users",
+          // https://stackoverflow.com/questions/37337412/should-i-use-a-301-302-or-303-redirect-after-form-submission
+          statusCode: 303,
         },
       };
     }
@@ -142,7 +155,10 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async ({
 }) => {
   try {
     // need await so that error can be caught below
-    return (await gsspRouter.run(req, res)) as any;
+    return (await gsspRouter.run(
+      req,
+      res
+    )) as GetServerSidePropsResult<PageProps>;
   } catch (e) {
     return {
       props: {

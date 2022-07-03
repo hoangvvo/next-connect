@@ -27,10 +27,12 @@ const Home: NextPage = () => {
             </a>
           </Link>
 
-          <a href="/api-routes" className={styles.card}>
-            <h2>API Routes</h2>
-            <p>Use next-connect in API Routes</p>
-          </a>
+          <Link href="/api-routes">
+            <a className={styles.card}>
+              <h2>API Routes</h2>
+              <p>Use next-connect in API Routes</p>
+            </a>
+          </Link>
         </div>
       </main>
 

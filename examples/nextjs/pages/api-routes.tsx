@@ -12,43 +12,43 @@ const ApiRoutesPage: NextPage = () => {
       </Head>
       <main className={styles.main}>
         <h1 className={styles.title}>
-          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs">
-            API Routes example
-          </a>
+          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/api/users">
+            API Routes
+          </a>{" "}
+          example
         </h1>
-        <p>Open your devtool and try the following snippets.</p>
+        <p>
+          Open your devtool (<code>F12</code>) and try the following snippets.
+        </p>
         <div>
           <h2>
-            <code style={{ color: "rgb(212,0,255)" }}>POST /api/users</code>
+            <code className={styles.code}>POST /api/users</code>
             <span> - Create a user</span>
           </h2>
-          <code>
-            <pre>{`await fetch("/api/users", {
+          <pre className={styles.snippet}>{`await fetch("/api/users", {
+  method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ name: "Jane Doe", age: 18 }),
 }).then((res) => res.json());
 `}</pre>
-          </code>
           <h2>
-            <code style={{ color: "rgb(212,0,255)" }}>GET /api/users</code>
+            <code className={styles.code}>GET /api/users</code>
             <span> - Get all users</span>
           </h2>
-          <code>
-            <pre>{`await fetch("/api/users").then((res) => res.json());
+          <pre
+            className={styles.snippet}
+          >{`await fetch("/api/users").then((res) => res.json());
 `}</pre>
-          </code>
           <h2>
-            <code style={{ color: "rgb(212,0,255)" }}>GET /api/users/:id</code>
+            <code className={styles.code}>GET /api/users/:id</code>
             <span> - Get a single user</span>
           </h2>
-          <code>
-            <pre>
-              {`await fetch("/api/users/`}
-              <span style={{ color: "rgb(212,0,255)" }}>some-id</span>
-              {`").then(res => res.json());
+          <pre className={styles.snippet}>
+            {`await fetch("/api/users/`}
+            <span className={styles.code}>some-id</span>
+            {`").then(res => res.json());
 `}
-            </pre>
-          </code>
+          </pre>
         </div>
       </main>
     </div>

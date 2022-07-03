@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
-import type { User } from "../../../common/api";
+import type { User } from "../../../utils/api";
 import {
   getUsers,
   randomId,
   saveUsers,
   validateUser,
-} from "../../../common/api";
+} from "../../../utils/api";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 

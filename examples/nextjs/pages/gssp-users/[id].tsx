@@ -1,10 +1,14 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import type { GetServerSideProps, NextPage } from "next";
+import type {
+  GetServerSideProps,
+  GetServerSidePropsResult,
+  NextPage,
+} from "next";
 import { createRouter } from "next-connect";
 import Head from "next/head";
-import type { User } from "../../common/api";
-import { getUsers } from "../../common/api";
 import styles from "../../styles/styles.module.css";
+import type { User } from "../../utils/api";
+import { getUsers } from "../../utils/api";
 
 interface PageProps {
   user: User;
@@ -20,14 +24,20 @@ const UserPage: NextPage<PageProps> = ({ user }) => {
       </Head>
       <main className={styles.main}>
         <h1 className={styles.title}>
-          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/gssp.tsx">
+          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/gssp-users/[id].tsx">
             getServerSideProps
           </a>{" "}
           Example
         </h1>
-        <h2>
-          My name is {user.name}. I am {user.age} years old
-        </h2>
+        <h2>User Data</h2>
+        <div className={styles.card}>
+          <p>
+            <strong>Name:</strong> {user.name}
+          </p>
+          <p>
+            <strong>Age:</strong> {user.age}
+          </p>
+        </div>
       </main>
     </div>
   );
@@ -36,16 +46,17 @@ const UserPage: NextPage<PageProps> = ({ user }) => {
 export default UserPage;
 
 const gsspRouter = createRouter<
-  IncomingMessage & { body?: Record<string, string | number> },
+  IncomingMessage & {
+    body?: Record<string, string | number>;
+    params?: Record<string, string>;
+  },
   ServerResponse
->().get((req) => {
+>().get((req): GetServerSidePropsResult<PageProps> => {
   const users = getUsers(req);
-  // @ts-ignore: this is attached earlier
-  const user = users.find((user) => user.id === req.params.id);
+  const user = users.find((user) => user.id === req.params?.id);
   if (!user) {
     return {
       notFound: true,
-      props: {},
     };
   }
   return {
@@ -62,5 +73,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async ({
 }) => {
   // @ts-ignore: attach params to req.params
   req.params = params;
-  return gsspRouter.run(req, res) as any;
+  return gsspRouter.run(req, res) as Promise<
+    GetServerSidePropsResult<PageProps>
+  >;
 };

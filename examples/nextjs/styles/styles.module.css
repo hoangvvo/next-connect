@@ -43,6 +43,7 @@
   margin: 0;
   line-height: 1.15;
   font-size: 2rem;
+  margin-bottom: 1rem;
 }
 
 .title,
@@ -57,12 +58,20 @@
 }
 
 .code {
-  background: #fafafa;
-  border-radius: 5px;
-  padding: 0.75rem;
+  color: rgb(212, 0, 255);
   font-size: 1.1rem;
-  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-    Bitstream Vera Sans Mono, Courier New, monospace;
+  font-family: monospace;
+}
+
+.snippet {
+  border-radius: 8px;
+  background: #1d1f21;
+  color: #f8f8f2;
+  padding: 2rem 1.75rem;
+  font-size: 0.9rem;
+  font-family: monospace;
+  display: block;
+  margin: 1rem 0 2rem;
 }
 
 .grid {
