@@ -24,7 +24,7 @@ If you are submitting a :bug: bug report, please:
 
 ### Process on submitting a PR
 
-*Generally, all pull requests should have references to an issue.*
+_Generally, all pull requests should have references to an issue._
 
 If you are :sparkles: **adding a new feature** or :zap: **improving an algorithm**, please first [create an issue](../../issues/new) for discussion.
 

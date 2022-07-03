@@ -10,24 +10,34 @@
     "connect"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
-    "require": "./dist/index.cjs",
-    "import": "./dist/index.js"
+    "import": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/esm/index.js"
+    },
+    "require": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/commonjs/index.cjs"
+    }
   },
+  "main": "./dist/commonjs/index.cjs",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "lint": "eslint src -c .eslintrc --ext js",
-    "test": "c8 mocha",
-    "test-import": "cd test-import && npm i && npm start",
-    "build": "rollup --config",
-    "prepublishOnly": "npm run test && npm run build",
-    "coverage": "c8 report --reporter=text-lcov > coverage.lcov"
+    "build:esm": "tsc --outDir ./dist/esm",
+    "build:commonjs": "tsc --outDir ./dist/commonjs --module commonjs && node ./scripts/rename-cjs-extenstion.js ./dist/commonjs",
+    "build:types": "tsc --outDir ./dist/types --declaration --emitDeclarationOnly",
+    "build": "npm run build:esm && npm run build:commonjs && npm run build:types",
+    "test": "c8 tap",
+    "prepublishOnly": "npm run clean && npm run test && npm run build",
+    "coverage": "c8 report --reporter=lcov",
+    "lint": "eslint ./src --ext json,ts --ignore-path .gitignore",
+    "format": "prettier . -w --ignore-path ./.gitignore",
+    "clean": "rm -rf ./dist"
   },
   "repository": {
     "type": "git",
@@ -40,15 +50,31 @@
   "homepage": "https://github.com/hoangvvo/next-connect#readme",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^17.0.14",
-    "c8": "^7.11.0",
-    "eslint": "^8.8.0",
-    "mocha": "^9.2.0",
-    "rollup": "^2.74.0",
-    "rollup-plugin-copy": "^3.4.0",
-    "supertest": "^6.2.2"
+    "@tsconfig/node14": "^1.0.3",
+    "@types/node": "^18.0.0",
+    "@types/tap": "^15.0.7",
+    "@typescript-eslint/eslint-plugin": "^5.30.3",
+    "@typescript-eslint/parser": "^5.30.3",
+    "c8": "^7.11.3",
+    "eslint": "^8.19.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1",
+    "tap": "^16.3.0",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4"
+  },
+  "tap": {
+    "node-arg": [
+      "--loader",
+      "ts-node/esm"
+    ],
+    "coverage": false
   },
   "dependencies": {
-    "trouter": "^3.2.0"
+    "regexparam": "^2.0.1"
+  },
+  "engines": {
+    "node": ">=12.22.0"
   }
 }

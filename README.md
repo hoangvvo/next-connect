@@ -2,38 +2,78 @@
 
 [![npm](https://badgen.net/npm/v/next-connect)](https://www.npmjs.com/package/next-connect)
 [![CircleCI](https://circleci.com/gh/hoangvvo/next-connect.svg?style=svg)](https://circleci.com/gh/hoangvvo/next-connect)
-[![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/master/graph/badge.svg)](https://codecov.io/gh/hoangvvo/next-connect)
+[![codecov](https://codecov.io/gh/hoangvvo/next-connect/branch/main/graph/badge.svg?token=LGIyl3Ti4H)](https://codecov.io/gh/hoangvvo/next-connect)
 [![minified size](https://badgen.net/bundlephobia/min/next-connect)](https://bundlephobia.com/result?p=next-connect)
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
-[![PRs Welcome](https://badgen.net/badge/PRs/welcome/ff5252)](CONTRIBUTING.md)
 
-The smol method routing and middleware for [Next.js](https://nextjs.org/) (also works in [other frameworks](#using-in-other-frameworks)). Powered by [trouter](https://github.com/lukeed/trouter).
+The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) and many other frameworks.
 
 ## Features
 
-- Compatible with Express.js middleware and router => Drop-in replacement for Express.js.
-- Lightweight (~ 3KB) => Suitable for serverless environment.
-- 5x faster than Express.js with no overhead
+- [Koa](https://koajs.com/)-like Async middleware
+- Lightweight => Suitable for serverless environment
+- 5x faster than Express.js with no overhead. Compatible with Express.js via [a wrapper](#expressjs-compatibility).
 - Works with async handlers (with error catching)
 - TypeScript support
 
 ## Installation
 
 ```sh
-npm install next-connect
-// or
-yarn add next-connect
+npm install next-connect@next
 ```
 
 ## Usage
 
-`next-connect` is often used in [API Routes](https://nextjs.org/docs/api-routes/introduction):
+Although `next-connect` is initially written for Next.js, it can be used in [http server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener), [Vercel](https://vercel.com/docs/concepts/functions/serverless-functions). See [Examples](./examples/) for more integrations.
 
-```javascript
+See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more.
+
+Below are some use cases.
+
+### Next.js API Routes
+
+```typescript
 // pages/api/hello.js
-import nc from "next-connect";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { createRouter } from "next-connect";
 
-const handler = nc({
+// Default Req and Res are IncomingMessage and ServerResponse
+// You may want to pass in NextApiRequest and NextApiResponse
+const router = createRouter<NextApiRequest, NextApiResponse>();
+
+router
+  .use(async (req, res, next) => {
+    const start = Date.now();
+    await next(); // call next in chain
+    const end = Date.now();
+    console.log(`Request took ${end - start}ms`);
+  })
+  .use(authMiddleware)
+  .get((req, res) => {
+    res.send("Hello world");
+  })
+  .post(async (req, res) => {
+    // use async/await
+    const user = await insertUser(req.body.user);
+    res.json({ user });
+  })
+  .put(
+    async (req, res, next) => {
+      // You may want to pass in NextApiRequest & { isLoggedIn: true }
+      // in createRouter generics to define this extra property
+      if (!req.isLoggedIn) throw new Error("thrown stuff will be caught");
+      // go to the next in chain
+      return next();
+    },
+    async (req, res) => {
+      const user = await updateUser(req.body.user);
+      res.json({ user });
+    }
+  );
+
+// create a handler from router with custom
+// onError and onNoMatch
+export default router.handler({
   onError: (err, req, res, next) => {
     console.error(err.stack);
     res.status(500).end("Something broke!");
@@ -41,307 +81,342 @@ const handler = nc({
   onNoMatch: (req, res) => {
     res.status(404).end("Page is not found");
   },
-})
-  .use(someMiddleware())
-  .get((req, res) => {
-    res.send("Hello world");
+});
+```
+
+### Next.js getServerSideProps
+
+```jsx
+// page/users/[id].js
+import { createRouter } from "next-connect";
+
+export default function Page({ user, updated }) {
+  return (
+    <div>
+      {updated && <p>User has been updated</p>}
+      <div>{JSON.stringify(user)}</div>
+      <form method="POST">{/* User update form */}</form>
+    </div>
+  );
+}
+
+const router = createRouter()
+  .use(async (req, res, next) => {
+    logRequest(req);
+    return next();
   })
-  .post((req, res) => {
-    res.json({ hello: "world" });
+  .get(async (req, res) => {
+    const user = await getUser(req.params.id);
+    if (!user) {
+      // https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props#notfound
+      return { props: { notFound: true } };
+    }
+    return {
+      props: { user, updated: true },
+    };
   })
-  .put(async (req, res) => {
-    res.end("async/await is also supported!");
-  })
-  .patch(async (req, res) => {
-    throw new Error("Throws me around! Error can be caught and handled.");
+  .post(async (req, res) => {
+    const user = await updateUser(req);
+    return {
+      props: { user, updated: true },
+    };
   });
 
-export default handler;
-```
-
-**NOTE:** Make sure the response is sent or `handler()` will never resolve (unless `options.disableResponseWait` is `true`).
-
-For quick migration from [Custom Express server](https://nextjs.org/docs/advanced-features/custom-server), simply replacing `express()` _and_ `express.Router()` with `nc()` and follow the [match multiple routes recipe](#catch-all).
-
-For usage in pages with [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering), see [`.run`](#runreq-res).
-
-See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more)
-
-### TypeScript
-
-By default, the base interfaces of `req` and `res` are `IncomingMessage` and `ServerResponse`. When using in API Routes, you would set them to `NextApiRequest` and `NextApiResponse` by providing the generics to the factory function like so:
-
-```typescript
-import { NextApiRequest, NextApiResponse } from "next";
-import nc from "next-connect";
-
-const handler = nc<NextApiRequest, NextApiResponse>();
-```
-
-In each handler, you can also define custom properties to `req` and `res` (such as `req.user` or `res.cookie`) like so:
-
-```typescript
-interface ExtendedRequest {
-  user: string;
+export async function getServerSideProps({ req, res }) {
+  try {
+    // we await here so that the error can be caught below
+    // rather than propagate to the outer layer
+    return await router.run(req, res);
+  } catch (e) {
+    // handle the error
+    return {
+      props: { error: e.message },
+    };
+  }
 }
-interface ExtendedResponse {
-  cookie(name: string, value: string): void;
-}
-
-handler.post<ExtendedRequest, ExtendedResponse>((req, res) => {
-  req.user = "Anakin";
-  res.cookie("sid", "8108");
-});
 ```
 
 ## API
 
-The API is similar to [Express.js](https://github.com/expressjs/express) with several differences:
+### router = createRouter(options)
 
-- It does not include any [helper methods](http://expressjs.com/en/4x/api.html#res.append) or template engine (you can incorporate them using middleware).
-- It does not support error-handling middleware pattern. Use `options.onError` instead.
+Create an instance Node.js router.
 
-It is more like good ol' [connect](https://www.npmjs.com/package/connect) (hence the name) with method routing.
+**options.attachParams**
 
-### handler = nc(options?)
+Passing `true` will attach params object to req. By default, `next-connect` does not set to req.params. If `req.params` already exists, it [Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) into `req.params`.
 
-Initialize an instance of `next-connect`.
+```js
+const router = createRouter({ attachParams: true });
 
-#### options.onError
-
-**Important:** It is strongly recommended to set this option, since the default does not report the error to the terminal.
-
-Accepts a function as a catch-all error handler; executed whenever a middleware throws an error.
-By default, it responds with status code `500` and an error message if any.
-
-```javascript
-function onError(err, req, res, next) {
-  logger.log(err);
-  // OR: console.error(err);
-
-  res.status(500).end(err.toString());
-  // OR: you may want to continue
-  next();
-}
-
-const handler = nc({ onError });
-
-handler
-  .use((req, res, next) => {
-    throw new Error("oh no!");
-    // or use next
-    next(Error("oh no"));
-  })
-  .use((req, res) => {
-    // this will run if next() is called in onError
-    res.end("error no more");
-  });
-```
-
-**Note:** This option is ignored if `handler` is used as a sub app or when `handler.run()` is used.
-
-#### options.onNoMatch
-
-Accepts a function of `(req, res)` as a handler when no route is matched.
-By default, it responds with `404` status and `not found` body.
-
-```javascript
-function onNoMatch(req, res) {
-  res.status(404).end("page is not found... or is it");
-}
-
-const handler = nc({ onNoMatch });
-```
-
-**Note:** This option is ignored if `handler` is used as a sub app or when `handler.run()` is used.
-
-#### options.attachParams
-
-Passing `true` will attach `params` object to `req`. By default, it does not set to `req.params`.
-
-```javascript
-const handler = nc({ attachParams: true });
-
-handler.get("/users/:userId/posts/:postId", (req, res) => {
+router.get("/users/:userId/posts/:postId", (req, res) => {
   // Visiting '/users/12/posts/23' will render '{"userId":"12","postId":"23"}'
   res.send(req.params);
 });
 ```
 
-### options.disableResponseWait
+### router.use(base, ...fn)
 
-Passing `true` will disable waiting for the response to end (that is, after `res.end()` is called) before resolving the `handler(req, res)` promise.
-
-```js
-await handler(req, res);
-// will not reach here unless res.end() has been called or options.disableResponseWait is true.
-```
-
-**Note:** This option is ignored if `handler` is used as a sub app or when `handler.run()` is used.
-
-### handler.use(base, ...fn)
-
-`base` (optional) - match all route to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
+`base` (optional) - match all routes to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)
 
 `fn`(s) can either be:
 
 - functions of `(req, res[, next])`
-- **or** an instance of `next-connect`, where it will act as a sub application. `onError` and `onNoMatch` of that subapp are disregarded.
+- **or** a router instance
 
 ```javascript
 // Mount a middleware function
-handler.use((req, res, next) => {
+router1.use(async (req, res, next) => {
   req.hello = "world";
-  next(); // call to proceed to next in chain
+  await next(); // call to proceed to the next in chain
+  console.log("request is done"); // call after all downstream handler has run
 });
 
 // Or include a base
-handler.use("/foo", fn); // Only run in /foo/**
+router2.use("/foo", fn); // Only run in /foo/**
 
-// Mount an instance of next-connect
-const common = nc().use(midd1).use("/", midd2); // good for common middlewares
-const auth = nc().use("/dashboard", checkAuth);
-const subapp = nc().get(getHandle).post("/baz", postHandle).put("/", putHandle);
-handler
-  // `midd1` and `midd2` runs everywhere
-  .use(common)
-  // `checkAuth` only runs on /dashboard/*
-  .use(auth)
-  // `getHandle` runs on /foo/*
-  // `postHandle` runs on /foo/baz
-  // `putHandle` runs on /foo
-  .use("/foo", subapp);
-
-// You can use a library too.
-handler.use(passport.initialize());
+// mount an instance of router
+const sub1 = createRouter().use(fn1, fn2);
+const sub2 = createRouter().use("/dashboard", auth);
+const sub3 = createRouter()
+  .use("/waldo", subby)
+  .get(getty)
+  .post("/baz", posty)
+  .put("/", putty);
+router3
+  // - fn1 and fn2 always run
+  // - auth runs only on /dashboard
+  .use(sub1, sub2)
+  // `subby` runs on ANY /foo/waldo?/*
+  // `getty` runs on GET /foo/*
+  // `posty` runs on POST /foo/baz
+  // `putty` runs on PUT /foo
+  .use("/foo", sub3);
 ```
 
-### handler.METHOD(pattern, ...fns)
+### router.METHOD(pattern, ...fns)
 
-`METHOD` is a HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
+`METHOD` is an HTTP method (`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`) in lowercase.
 
-`pattern` (optional) - match all route based on [supported](https://github.com/lukeed/trouter#pattern) pattern or match all if omitted.
+`pattern` (optional) - match routes based on [supported pattern](https://github.com/lukeed/regexparam#regexparam-) or match any if omitted.
 
-`fn`(s) are functions of `(req, res[, next])`. This is ideal to be used in API Routes.
+`fn`(s) are functions of `(req, res[, next])`.
 
 ```javascript
-handler.get("/api/user", (req, res, next) => {
+router.get("/api/user", (req, res, next) => {
   res.json(req.user);
 });
-handler.post("/api/users", (req, res, next) => {
+router.post("/api/users", (req, res, next) => {
   res.end("User created");
 });
-handler.put("/api/user/:id", (req, res, next) => {
+router.put("/api/user/:id", (req, res, next) => {
   // https://nextjs.org/docs/routing/dynamic-routes
   res.end(`User ${req.query.id} updated`);
 });
-handler.get((req, res, next) => {
+
+// Next.js already handles routing (including dynamic routes), we often
+// omit `pattern` in `.METHOD`
+router.get((req, res, next) => {
   res.end("This matches whatever route");
 });
 ```
 
-However, since Next.js already handles routing (including dynamic routes), we often omit `pattern` in `.METHOD`.
+**Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). For example, having a `router.put("/api/foo", handler)` inside `page/api/index.js` _does not_ serve that handler at `/api/foo`.
 
-**Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). For example, having a `handler.put("/api/foo", handler)` inside `page/api/index.js` _does not_ serve that handler at `/api/foo`.
-
-### handler.all(pattern, ...fns)
+### router.all(pattern, ...fns)
 
 Same as [.METHOD](#methodpattern-fns) but accepts _any_ methods.
 
-### handler.run(req, res)
+### router.handler(options)
 
-Runs `req` and `res` the middleware and returns a **promise**. It will **not** render `404` on not found or `onError` on error.
+Create a handler to handle incoming requests.
 
-**Note:** You _MUST_ call `next()` in the final handler for the promise to resolve.
+**options.onError**
+
+Accepts a function as a catch-all error handler; executed whenever a handler throws an error.
+By default, it responds with status code `500` and an error stack if any.
+
+```javascript
+function onError(err, req, res) {
+  logger.log(err);
+  // OR: console.error(err);
+
+  res.status(500).end("Internal server error");
+}
+
+export default router.handler({ onError });
+```
+
+**Note:** exposing the error stack by default is a security risk, consider defining a custom one like the above to mitigate the risk.
+
+**options.onNoMatch**
+
+Accepts a function of `(req, res)` as a handler when no route is matched.
+By default, it responds with a `404` status and a `Route [Method] [Url] not found` body.
+
+```javascript
+function onNoMatch(req, res) {
+  res.status(404).end("page is not found... or is it!?");
+}
+
+export default router.handler({ onNoMatch });
+```
+
+### router.run(req, res)
+
+Runs `req` and `res` through the middleware chain and returns a **promise**. It resolves with the value returned from handlers.
+
+```js
+router
+  .use(async (req, res, next) => {
+    return (await next()) + 1;
+  })
+  .use(async () => {
+    return (await next()) + 2;
+  })
+  .use(async () => {
+    return 3;
+  });
+
+console.log(await router.run(req, res));
+// The above will print "6"
+```
 
 This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
 
-```javascript
-// page/index.js
-export async function getServerSideProps({ req, res }) {
-  const handler = nc()
-    .use(passport.initialize())
-    .post(async (req, res, next) => {
-      await logPostRequest(req);
-      next(); // <- make sure next() is called
-    });
-  try {
-    await handler.run(req, res);
-  } catch (e) {
-    // handle the error
-  }
-  // do something with the upgraded req and res
-  return {
-    props: { user: req.user },
-  };
-}
-```
-
 ## Common errors
 
-1. **DO NOT** reuse the same instance of `nc` like the below pattern:
+There are some pitfalls in using `next-connect`. Below are things to keep in mind to use it correctly.
 
-```js
-// middleware/common
-export default nc().use(a).use(b);
+1. **Always** `await next()`
 
-// api/foo
-import Handler from "middleware/common";
-export default Handler.get(x);
+If `next()` is not awaited, errors will not be caught if they are thrown in async handlers, leading to `UnhandledPromiseRejection`.
 
-// api/bar
-import Handler from "middleware/common";
-export default Handler.get(y);
+```javascript
+// OK: we don't use async so no need to await
+router
+  .use((req, res, next) => {
+    next();
+  })
+  .use((req, res, next) => {
+    next();
+  })
+  .use(() => {
+    throw new Error("💥");
+  });
+
+// BAD: This will lead to UnhandledPromiseRejection
+router
+  .use(async (req, res, next) => {
+    next();
+  })
+  .use(async (req, res, next) => {
+    next();
+  })
+  .use(async () => {
+    throw new Error("💥");
+  });
+
+// GOOD
+router
+  .use(async (req, res, next) => {
+    await next(); // next() is awaited, so errors are caught properly
+  })
+  .use((req, res, next) => {
+    return next(); // this works as well since we forward the rejected promise
+  })
+  .use(async () => {
+    throw new Error("💥");
+    // return new Promise.reject("💥");
+  });
 ```
 
-This is because in each API Route, the same NextConnect instance is mutated, leading to undefined behaviors.
-If you want to achieve the something like that, try rewriting the base instance as a factory function to avoid reusing the same instance:
+Another issue is that the handler would resolve before all the code in each layer runs.
 
-```js
-// middleware/common
-export default function base() {
-  return nc().use(a).use(b);
-}
+```javascript
+const handler = router
+  .use(async (req, res, next) => {
+    next(); // this is not returned or await
+  })
+  .get(async () => {
+    // simulate a long task
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    res.send("ok");
+    console.log("request is completed");
+  })
+  .handler();
 
-// api/foo
-import base from "middleware/common";
-export default base().get(x);
+await handler(req, res);
+console.log("finally"); // this will run before the get layer gets to finish
 
-// api/bar
-import base from "middleware/common";
-export default base().get(y);
+// This will result in:
+// 1) "finally"
+// 2) "request is completed"
 ```
 
-2. **DO NOT** use response function like `res.(s)end` or `res.redirect` inside `getServerSideProps`.
+2. **DO NOT** reuse the same instance of `router` like the below pattern:
 
-```js
+```javascript
+// api-libs/base.js
+export default createRouter().use(a).use(b);
+
+// api/foo.js
+import router from "api-libs/base";
+export default router.get(x);
+
+// api/bar.js
+import router from "api-libs/base";
+export default router.get(y);
+```
+
+This is because, in each API Route, the same router instance is mutated, leading to undefined behaviors.
+If you want to achieve something like that, you can use `router.clone` to return different instances with the same routes populated.
+
+```javascript
+// api-libs/base.js
+export default createRouter().use(a).use(b);
+
+// api/foo.js
+import router from "api-libs/base";
+export default router.clone().get(x);
+
+// api/bar.js
+import router from "api-libs/base";
+export default router.clone().get(y);
+```
+
+3. **DO NOT** use response function like `res.(s)end` or `res.redirect` inside `getServerSideProps`.
+
+```javascript
 // page/index.js
-const handler = nc()
+const handler = createRouter()
   .use((req, res) => {
-    // BAD: res.redirect is not a function (not defined in `getServerSideProps`
+    // BAD: res.redirect is not a function (not defined in `getServerSideProps`)
+    // See https://github.com/hoangvvo/next-connect/issues/194#issuecomment-1172961741 for a solution
     res.redirect("foo");
   })
   .use((req, res) => {
-    // BAD: `getServerSideProps` gives undefined behavior if we try to send response
+    // BAD: `getServerSideProps` gives undefined behavior if we try to send a response
     res.end("bar");
   });
 
 export async function getServerSideProps({ req, res }) {
-  await handler.run(req, res);
+  await router.run(req, res);
   return {
     props: {},
   };
 }
 ```
 
-3. **DO NOT** use `handler(req, res)` directly in `getServerSideProps`.
+3. **DO NOT** use `handler()` directly in `getServerSideProps`.
 
-```js
+```javascript
 // page/index.js
-const handler = nc().use(foo).use(bar);
+const router = createRouter().use(foo).use(bar);
+const handler = router.handler();
 
 export async function getServerSideProps({ req, res }) {
-  await handler(req, res); // BAD: You must call handler.run(req, res);
+  await handler(req, res); // BAD: You should call router.run(req, res);
   return {
     props: {},
   };
@@ -352,91 +427,50 @@ export async function getServerSideProps({ req, res }) {
 
 ### Next.js
 
-<details id="catch-all">
+<details>
 <summary>Match multiple routes</summary>
 
 If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route.
 
-If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
+If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch-all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
 
-```js
+```javascript
 // pages/api/[[...slug]].js
-import nc from "next-connect";
+import { createRouter } from "next-connect";
 
-const handler = nc({ attachParams: true })
+const router = createRouter()
   .use("/api/hello", someMiddleware())
   .get("/api/user/:userId", (req, res) => {
     res.send(`Hello ${req.params.userId}`);
   });
 
-export default handler;
+export default router.handler();
 ```
 
 While this allows quick migration from Express.js, consider seperating routes into different files (`/api/user/[userId].js`, `/api/hello.js`) in the future.
 
 </details>
 
-### Using in other frameworks
-
-`next-connect` supports any frameworks and runtimes that support `(req, res) => void` handler.
+### Express.js Compatibility
 
 <details>
-<summary><a href="https://github.com/zeit/micro">Micro</a></summary>
+<summary>Middleware wrapper</summary>
 
-```javascript
-const { send } = require("micro");
-const nc = require("next-connect");
+Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, we can build a wrapper like the below:
 
-module.exports = nc()
-  .use(middleware)
-  .get((req, res) => {
-    res.end("Hello World!");
-  })
-  .post((req, res) => {
-    send(res, 200, { hello: "world" });
-  });
-```
+```js
+import someExpressMiddleware from "some-express-middleware";
 
-</details>
+const withExpressMiddleware = (middleware) => {
+  return async (req, res, next) => {
+    await new Promise((resolve, reject) => {
+      middleware(req, res, (err) => (err ? reject(err) : resolve()));
+    });
+    return next();
+  };
+};
 
-<details>
-<summary><a href="https://vercel.com/docs/serverless-functions/introduction">Vercel</a></summary>
-
-```javascript
-const nc = require("next-connect");
-
-module.exports = nc()
-  .use(middleware)
-  .get((req, res) => {
-    res.send("Hello World!");
-  })
-  .post((req, res) => {
-    res.json({ hello: "world" });
-  });
-```
-
-</details>
-
-<details>
-<summary>Node.js <a href="https://nodejs.org/api/http.html">HTTP</a> / <a href="https://nodejs.org/api/http2.html">HTTP2</a> Server</summary>
-
-```javascript
-const http = require("http");
-// const http2 = require('http2');
-const nc = require("next-connect");
-
-const handler = nc()
-  .use(middleware)
-  .get((req, res) => {
-    res.end("Hello world");
-  })
-  .post((req, res) => {
-    res.setHeader("content-type", "application/json");
-    res.end(JSON.stringify({ hello: "world" }));
-  });
-
-http.createServer(handler).listen(PORT);
-// http2.createServer(handler).listen(PORT);
+router.use(withExpressMiddleware(someExpressMiddleware));
 ```
 
 </details>
