@@ -162,18 +162,36 @@ router.get("/users/:userId/posts/:postId", (req, res) => {
 `fn`(s) can either be:
 
 - functions of `(req, res[, next])`
-- **or** an instance of `next-connect`, where it will act as a sub application. `onError` and `onNoMatch` of that subapp are disregarded.
+- **or** a router instance
 
 ```javascript
 // Mount a middleware function
-router.use(async (req, res, next) => {
+router1.use(async (req, res, next) => {
   req.hello = "world";
   await next(); // call to proceed to the next in chain
   console.log("request is done"); // call after all downstream handler has run
 });
 
 // Or include a base
-router.use("/foo", fn); // Only run in /foo/**
+router2.use("/foo", fn); // Only run in /foo/**
+
+// mount an instance of router
+const sub1 = createRouter().use(fn1, fn2);
+const sub2 = createRouter().use("/dashboard", auth);
+const sub3 = createRouter()
+  .use("/waldo", subby)
+  .get(getty)
+  .post("/baz", posty)
+  .put("/", putty);
+router3
+  // - fn1 and fn2 always run
+  // - auth runs only on /dashboard
+  .use(sub1, sub2)
+  // `subby` runs on ANY /foo/waldo?/*
+  // `getty` runs on GET /foo/*
+  // `posty` runs on POST /foo/baz
+  // `putty` runs on PUT /foo
+  .use("/foo", sub3);
 ```
 
 ### router.METHOD(pattern, ...fns)
@@ -246,7 +264,7 @@ export default router.handler({ onNoMatch });
 
 ### router.run(req, res)
 
-Runs `req` and `res` through the middleware chain and returns a **promise**. It will **not** call `onError` or `onNoMatch`. It resolves with the value returned from handlers.
+Runs `req` and `res` through the middleware chain and returns a **promise**. It resolves with the value returned from handlers.
 
 ```js
 router
@@ -299,16 +317,17 @@ router
     throw new Error("💥");
   });
 
-// GOOD: next() is await, so errors are caught properly
+// GOOD
 router
   .use(async (req, res, next) => {
-    await next();
+    await next(); // next() is await, so errors are caught properly
   })
   .use((req, res, next) => {
-    return next(); // this works as well since it forwards the rejected promise
+    return next(); // this works as well since we forward the rejected promise
   })
   .use(async () => {
     throw new Error("💥");
+    // return new Promise.reject("💥");
   });
 ```
 
@@ -338,34 +357,32 @@ console.log("finally"); // this will run before the get layer gets to finish
 2. **DO NOT** reuse the same instance of `router` like the below pattern:
 
 ```javascript
-// api-libs/base
+// api-libs/base.js
 export default createRouter().use(a).use(b);
 
-// api/foo
+// api/foo.js
 import router from "api-libs/base";
 export default router.get(x);
 
-// api/bar
+// api/bar.js
 import router from "api-libs/base";
 export default router.get(y);
 ```
 
 This is because, in each API Route, the same router instance is mutated, leading to undefined behaviors.
-If you want to achieve something like that, try rewriting the base instance as a factory function to avoid reusing the same instance:
+If you want to achieve something like that, you can use `router.clone` to return different instances with the same routes populated.
 
 ```javascript
-// api-libs/base
-export default function createBaseRouter() {
-  return createRouter().use(a).use(b);
-}
+// api-libs/base.js
+export default createRouter().use(a).use(b);
 
-// api/foo
-import createBaseRouter from "api-libs/base";
-export default createBaseRouter().get(x);
+// api/foo.js
+import router from "api-libs/base";
+export default router.clone().get(x);
 
-// api/bar
-import createBaseRouter from "api-libs/base";
-export default createBaseRouter().get(y);
+// api/bar.js
+import router from "api-libs/base";
+export default router.clone().get(y);
 ```
 
 3. **DO NOT** use response function like `res.(s)end` or `res.redirect` inside `getServerSideProps`.

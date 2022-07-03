@@ -586,6 +586,233 @@ test("find() - multiple regex w/ named groups", (t) => {
 /**
  * Additional handling tailored to next-connect
  */
+
+test("constructor() with base", (t) => {
+  t.equal(new Router().base, "/", "assign base to / by default");
+  t.equal(new Router("/foo").base, "/foo", "assign base to provided value");
+  t.end();
+});
+
+test("constructor() with routes", (t) => {
+  t.same(new Router().routes, [], "assign to empty route array by default");
+  const routes = [];
+  t.equal(
+    new Router(undefined, routes).routes,
+    routes,
+    "assign routes if provided"
+  );
+  t.end();
+});
+
+test("clone()", (t) => {
+  const ctx = new Router();
+  t.not(ctx, ctx.clone(), "not the same identity");
+  t.equal(ctx.clone("/foo").base, "/foo", "cloned with custom base");
+
+  const ctxRoutes = new Router("", [noop as any]);
+  t.not(ctxRoutes.clone().routes, ctxRoutes.routes, "routes are deep cloned");
+
+  t.end();
+});
+
+test("use() - default to / with no base", (t) => {
+  t.plan(2);
+  const ctx = new Router();
+  const fn = () => undefined;
+  ctx.use(fn);
+  testRoute(t, ctx.routes[0], {
+    keys: [],
+    fns: [fn],
+    isMiddle: true,
+    method: "",
+    route: "/some/wacky/route",
+  });
+});
+
+test("use() - mount router", (t) => {
+  const subCtx = new Router();
+
+  testRoute(t, new Router().use("/foo", subCtx, noop).routes[0], {
+    keys: [],
+    fns: [subCtx.clone("/foo"), noop],
+    isMiddle: true,
+    method: "",
+  });
+
+  testRoute(t, new Router().use("/", subCtx, noop).routes[0], {
+    keys: [],
+    fns: [subCtx, noop],
+    isMiddle: true,
+    method: "",
+  });
+
+  // nested mount
+  const subCtx2 = new Router().use("/bar", subCtx);
+  testRoute(t, new Router().use("/foo", subCtx2, noop).routes[0], {
+    keys: [],
+    fns: [subCtx2.clone("/foo"), noop],
+    isMiddle: true,
+    method: "",
+  });
+  testRoute(t, subCtx2.routes[0], {
+    keys: [],
+    fns: [subCtx.clone("/bar")],
+    isMiddle: true,
+    method: "",
+  });
+
+  // unsupported
+  t.throws(
+    () => new Router().use(new RegExp("/not/supported"), subCtx),
+    new Error("Mounting a router to RegExp base is not supported"),
+    "throws unsupported message"
+  );
+
+  t.end();
+});
+
+test("find() - w/ router with correct match", async (t) => {
+  const noop1 = async () => undefined;
+  const noop2 = async () => undefined;
+  const noop3 = async () => undefined;
+  const noop4 = async () => undefined;
+
+  const ctx = new Router<AnyHandler>()
+    .get(noop)
+    .use(
+      "/foo",
+      new Router<AnyHandler>()
+        .use("/", noop1)
+        .use("/bar", noop2, noop2)
+        .use("/quz", noop3),
+      noop4
+    );
+  t.same(
+    ctx.find("GET", "/foo"),
+    {
+      middleOnly: false,
+      params: {},
+      fns: [noop, noop1, noop4],
+    },
+    "matches exact base"
+  );
+
+  t.same(
+    ctx.find("GET", "/quz"),
+    {
+      middleOnly: false,
+      params: {},
+      fns: [noop],
+    },
+    "does not matches different base"
+  );
+
+  t.same(
+    ctx.find("GET", "/foobar"),
+    {
+      middleOnly: false,
+      params: {},
+      fns: [noop],
+    },
+    "does not matches different base (just-in-case case)"
+  );
+
+  t.same(
+    ctx.find("GET", "/foo/bar"),
+    {
+      middleOnly: false,
+      params: {},
+      fns: [noop, noop1, noop2, noop2, noop4],
+    },
+    "matches sub routes 1"
+  );
+
+  t.same(
+    ctx.find("GET", "/foo/quz"),
+    {
+      middleOnly: false,
+      params: {},
+      fns: [noop, noop1, noop3, noop4],
+    },
+    "matches sub routes 2"
+  );
+
+  // with params
+  t.same(
+    new Router()
+      .use("/:id", new Router().use("/bar", noop1), noop2)
+      .find("GET", "/foo/bar"),
+    {
+      middleOnly: true,
+      params: {
+        id: "foo",
+      },
+      fns: [noop1, noop2],
+    },
+    "with params"
+  );
+
+  t.same(
+    new Router()
+      .use("/:id", new Router().use("/:subId", noop1), noop2)
+      .find("GET", "/foo/bar"),
+    {
+      middleOnly: true,
+      params: {
+        id: "foo",
+        subId: "bar",
+      },
+      fns: [noop1, noop2],
+    },
+    "with params on both outer and sub"
+  );
+
+  t.same(
+    new Router().use(noop).use(new Router().get(noop1)).find("GET", "/"),
+    {
+      middleOnly: false,
+      params: {},
+      fns: [noop, noop1],
+    },
+    "set root middleOnly to false if sub = false"
+  );
+});
+
+test("find() - w/ router nested multiple level", (t) => {
+  const noop1 = async () => undefined;
+  const noop2 = async () => undefined;
+  const noop3 = async () => undefined;
+  const noop4 = async () => undefined;
+  const noop5 = async () => undefined;
+
+  const ctx4 = new Router<AnyHandler>().use(noop5);
+  const ctx3 = new Router<AnyHandler>().use(noop4).use("/:id", noop3);
+  const ctx2 = new Router<AnyHandler>().use("/quz", noop2, ctx3).use(ctx4);
+  const ctx = new Router<AnyHandler>().use("/foo", noop, ctx2, noop1);
+
+  t.same(ctx.find("GET", "/foo"), {
+    middleOnly: true,
+    params: {},
+    fns: [noop, noop5, noop1],
+  });
+
+  t.same(ctx.find("GET", "/foo/quz"), {
+    middleOnly: true,
+    params: {},
+    fns: [noop, noop2, noop4, noop5, noop1],
+  });
+
+  t.same(ctx.find("GET", "/foo/quz/bar"), {
+    middleOnly: true,
+    params: {
+      id: "bar",
+    },
+    fns: [noop, noop2, noop4, noop3, noop5, noop1],
+  });
+
+  t.end();
+});
+
 test("add() - matches all if no route", (t) => {
   t.plan(4);
   const ctx = new Router();
@@ -607,20 +834,6 @@ test("add() - matches all if no route", (t) => {
     matchAll: true,
     isMiddle: false,
     method: "POST",
-  });
-});
-
-test("use() - default to / with no base", (t) => {
-  t.plan(2);
-  const ctx = new Router();
-  const fn = () => undefined;
-  ctx.use(fn);
-  testRoute(t, ctx.routes[0], {
-    keys: [],
-    fns: [fn],
-    isMiddle: true,
-    method: "",
-    route: "/some/wacky/route",
   });
 });
 

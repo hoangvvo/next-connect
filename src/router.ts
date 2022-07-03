@@ -13,8 +13,9 @@ import type {
 } from "./types.js";
 
 export type Route<H> = {
+  prefix?: string;
   method: HttpMethod | "";
-  fns: H[];
+  fns: (H | Router<H extends FunctionLike ? H : never>)[];
   isMiddle: boolean;
 } & (
   | {
@@ -30,10 +31,10 @@ type RouteShortcutMethod<This, H extends FunctionLike> = (
 ) => This;
 
 export class Router<H extends FunctionLike> {
-  routes: Route<Nextable<H>>[];
-  constructor() {
-    this.routes = [];
-  }
+  constructor(
+    public base: string = "/",
+    public routes: Route<Nextable<H>>[] = []
+  ) {}
   public add(
     method: HttpMethod | "",
     route: RouteMatch | Nextable<H>,
@@ -59,14 +60,29 @@ export class Router<H extends FunctionLike> {
   public patch: RouteShortcutMethod<this, H> = this.add.bind(this, "PATCH");
   public delete: RouteShortcutMethod<this, H> = this.add.bind(this, "DELETE");
 
-  public use(base: RouteMatch | Nextable<H>, ...fns: Nextable<H>[]) {
-    if (typeof base === "function") {
+  public use(
+    base: RouteMatch | Nextable<H> | Router<H>,
+    ...fns: (Nextable<H> | Router<H>)[]
+  ) {
+    if (typeof base === "function" || base instanceof Router) {
       fns.unshift(base);
       base = "/";
     }
+    // mount subrouter
+    fns = fns.map((fn) => {
+      if (fn instanceof Router) {
+        if (typeof base === "string") return fn.clone(base);
+        throw new Error("Mounting a router to RegExp base is not supported");
+      }
+      return fn;
+    });
     const { keys, pattern } = parse(base, true);
     this.routes.push({ keys, pattern, method: "", fns, isMiddle: true });
     return this;
+  }
+
+  public clone(base?: string) {
+    return new Router<H>(base, Array.from(this.routes));
   }
 
   static async exec<H extends FunctionLike>(
@@ -115,7 +131,25 @@ export class Router<H extends FunctionLike> {
         } // else not a match
       }
       if (matched) {
-        fns.push(...route.fns);
+        fns.push(
+          ...route.fns
+            .map((fn) => {
+              if (fn instanceof Router) {
+                const base = fn.base as string;
+                let stripPathname = pathname.substring(base.length);
+                // fix stripped pathname, not sure why this happens
+                if (stripPathname[0] != "/")
+                  stripPathname = `/${stripPathname}`;
+                const result = fn.find(method, stripPathname);
+                if (!result.middleOnly) middleOnly = false;
+                // merge params
+                Object.assign(params, result.params);
+                return result.fns;
+              }
+              return fn;
+            })
+            .flat()
+        );
         if (!route.isMiddle) middleOnly = false;
       }
     }
