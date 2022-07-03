@@ -139,9 +139,22 @@ export async function getServerSideProps({ req, res }) {
 
 ## API
 
-### router = createRouter()
+### router = createRouter(options)
 
 Create an instance Node.js router.
+
+**options.attachParams**
+
+Passing `true` will attach params object to req. By default, `next-connect` does not set to req.params. If `req.params` already exists, it [Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) into `req.params`.
+
+```js
+const router = createRouter({ attachParams: true });
+
+router.get("/users/:userId/posts/:postId", (req, res) => {
+  // Visiting '/users/12/posts/23' will render '{"userId":"12","postId":"23"}'
+  res.send(req.params);
+});
+```
 
 ### router.use(base, ...fn)
 
@@ -398,7 +411,7 @@ export async function getServerSideProps({ req, res }) {
 
 ### Next.js
 
-<details id="catch-all">
+<details>
 <summary>Match multiple routes</summary>
 
 If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route.
@@ -424,8 +437,8 @@ While this allows quick migration from Express.js, consider seperating routes in
 
 ### Express.js Compatibility
 
-<details id="catch-all">
-<summary>Match multiple routes</summary>
+<details>
+<summary>Middleware wrapper</summary>
 
 Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, which is by calling the `next(err?)`, we can build a wrapper like the below:
 

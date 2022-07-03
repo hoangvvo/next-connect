@@ -23,7 +23,7 @@ test("createRouter() returns an instance", async (t) => {
 
 test("run() - runs req and res through fns and return last value", async (t) => {
   t.plan(7);
-  const ctx = new NodeRouter();
+  const ctx = createRouter();
   const req = { url: "/foo/bar", method: "POST" } as IncomingMessage;
   const res = {} as ServerResponse;
   const badFn = () => t.fail("test error");
@@ -54,7 +54,7 @@ test("run() - propagates error", async (t) => {
   const err = new Error("💥");
   await t.rejects(
     () =>
-      new NodeRouter()
+      createRouter()
         .use((_, __, next) => {
           next();
         })
@@ -67,7 +67,7 @@ test("run() - propagates error", async (t) => {
 
   await t.rejects(
     () =>
-      new NodeRouter()
+      createRouter()
         .use((_, __, next) => {
           return next();
         })
@@ -80,7 +80,7 @@ test("run() - propagates error", async (t) => {
 
   await t.rejects(
     () =>
-      new NodeRouter()
+      createRouter()
         .use((_, __, next) => {
           return next();
         })
@@ -96,7 +96,7 @@ test("run() - propagates error", async (t) => {
 test("run() - returns if no fns", async (t) => {
   const req = { url: "/foo/bar", method: "GET" } as IncomingMessage;
   const res = {} as ServerResponse;
-  const ctx = new NodeRouter();
+  const ctx = createRouter();
   const badFn = () => t.fail("test error");
   ctx.get("/foo", badFn);
   ctx.post("/foo/bar", badFn);
@@ -107,7 +107,7 @@ test("run() - returns if no fns", async (t) => {
 });
 
 test("handler() - basic", async (t) => {
-  t.type(new NodeRouter().handler(), "function", "returns a function");
+  t.type(createRouter().handler(), "function", "returns a function");
 });
 
 test("handler() - handles incoming (sync)", async (t) => {
@@ -116,7 +116,7 @@ test("handler() - handles incoming (sync)", async (t) => {
   const req = { method: "GET", url: "/" } as IncomingMessage;
   const res = {} as ServerResponse;
   const badFn = () => t.fail("test error");
-  await new NodeRouter()
+  await createRouter()
     .use((req, res, next) => {
       t.equal(++i, 1);
       next();
@@ -139,7 +139,7 @@ test("handler() - handles incoming (async)", async (t) => {
   const req = { method: "GET", url: "/" } as IncomingMessage;
   const res = {} as ServerResponse;
   const badFn = () => t.fail("test error");
-  await new NodeRouter()
+  await createRouter()
     .use(async (req, res, next) => {
       t.equal(++i, 1);
       await next();
@@ -170,7 +170,7 @@ test("handler() - calls onError if error thrown (sync)", async (t) => {
     },
   } as ServerResponse;
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .use(baseFn)
       .use(() => {
         throw new Error("💥");
@@ -182,7 +182,7 @@ test("handler() - calls onError if error thrown (sync)", async (t) => {
     "to resolve"
   );
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .use(baseFn)
       .use((req, res, next) => {
         next();
@@ -200,7 +200,7 @@ test("handler() - calls onError if error thrown (sync)", async (t) => {
     },
   } as ServerResponse;
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .use(baseFn)
       .get(() => {
         // non error throw
@@ -229,7 +229,7 @@ test("handler() - calls onError if error thrown (async)", async (t) => {
     return next();
   };
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .use(baseFn)
       .use(async () => {
         return Promise.reject(new Error("💥"));
@@ -241,7 +241,7 @@ test("handler() - calls onError if error thrown (async)", async (t) => {
     "to resolve"
   );
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .use(baseFn)
       .get(() => {
         throw new Error("💥");
@@ -254,7 +254,7 @@ test("handler() - calls onError if error thrown (async)", async (t) => {
 test("handler() - calls custom onError", async (t) => {
   t.plan(2);
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .get(() => {
         throw new Error("💥");
       })
@@ -277,7 +277,7 @@ test("handler() - calls onNoMatch if no fns matched", async (t) => {
     },
   } as ServerResponse;
   await t.resolves(
-    new NodeRouter().get("/foo").post("/foo/bar").handler()(req, res)
+    createRouter().get("/foo").post("/foo/bar").handler()(req, res)
   );
 });
 
@@ -291,7 +291,7 @@ test("handler() - calls onNoMatch if only middle fns found", async (t) => {
     },
   } as ServerResponse;
   await t.resolves(
-    new NodeRouter()
+    createRouter()
       .use("", (req, res, next) => {
         t.fail("test error");
         next();
@@ -304,7 +304,7 @@ test("handler() - calls onNoMatch if only middle fns found", async (t) => {
 test("handler() - calls custom onNoMatch if not found", async (t) => {
   t.plan(2);
   await t.resolves(
-    new NodeRouter().handler({
+    createRouter().handler({
       onNoMatch() {
         t.pass("onNoMatch called");
       },
@@ -318,7 +318,7 @@ test("handler() - calls custom onNoMatch if not found", async (t) => {
 test("handler() - calls onError if custom onNoMatch throws", async (t) => {
   t.plan(3);
   await t.resolves(
-    new NodeRouter().handler({
+    createRouter().handler({
       onNoMatch() {
         t.pass("onNoMatch called");
         throw new Error("💥");
@@ -330,6 +330,44 @@ test("handler() - calls onError if custom onNoMatch throws", async (t) => {
       { url: "/foo/bar", method: "GET" } as IncomingMessage,
       {} as ServerResponse
     )
+  );
+});
+
+test("prepareRequest() - attach params if options.params is true", async (t) => {
+  const req = {} as IncomingMessage;
+  const ctx = createRouter().get("/hello/:name");
+  // @ts-expect-error: internal
+  ctx.prepareRequest(
+    req,
+    {} as ServerResponse,
+    ctx.find("GET", "/hello/world")
+  );
+  // @ts-expect-error: extra prop
+  t.equal(req.params, undefined, "params are not attached");
+
+  const ctx2 = createRouter({ attachParams: true }).get("/hello/:name");
+  // @ts-expect-error: internal
+  ctx2.prepareRequest(
+    req,
+    {} as ServerResponse,
+    ctx2.find("GET", "/hello/world")
+  );
+  // @ts-expect-error: extra prop
+  t.same(req.params, { name: "world" }, "params are attached");
+
+  const reqWithParams = {
+    params: { goodbye: "world" },
+  };
+  // @ts-expect-error: internal
+  ctx2.prepareRequest(
+    reqWithParams as unknown as IncomingMessage,
+    {} as ServerResponse,
+    ctx2.find("GET", "/hello/world")
+  );
+  t.same(
+    reqWithParams.params,
+    { name: "world", goodbye: "world" },
+    "params are merged"
   );
 });
 

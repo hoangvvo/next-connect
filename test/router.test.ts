@@ -602,7 +602,7 @@ test("add() - matches all if no route", (t) => {
   const ctx2 = new Router();
   ctx2.add("POST", "", fn);
   testRoute(t, ctx2.routes[0], {
-    route: "/",
+    route: "/some/wacky/route",
     fns: [fn],
     matchAll: true,
     isMiddle: false,

@@ -4,11 +4,6 @@ export type FunctionLike = (...args: any[]) => unknown;
 
 export type RouteMatch = string | RegExp;
 
-export interface HandlerOptions<Handler extends FunctionLike> {
-  onNoMatch?: Handler;
-  onError?: (err: unknown, ...args: Parameters<Handler>) => ReturnType<Handler>;
-}
-
 export type NextHandler = () => any | Promise<any>;
 
 export type Nextable<H extends FunctionLike> = (
@@ -20,3 +15,12 @@ export type FindResult<H extends FunctionLike> = {
   params: Record<string, string>;
   middleOnly: boolean;
 };
+
+export interface HandlerOptions<Handler extends FunctionLike> {
+  onNoMatch?: Handler;
+  onError?: (err: unknown, ...args: Parameters<Handler>) => ReturnType<Handler>;
+}
+
+export interface NodeRouterOptions {
+  attachParams?: boolean;
+}

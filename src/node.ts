@@ -1,6 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { Router } from "./router.js";
-import type { HandlerOptions, HttpMethod } from "./types.js";
+import type {
+  FindResult,
+  HandlerOptions,
+  HttpMethod,
+  NodeRouterOptions,
+} from "./types.js";
 
 export type RequestHandler<
   Req extends IncomingMessage,
@@ -11,27 +16,43 @@ export class NodeRouter<
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse
 > extends Router<RequestHandler<Req, Res>> {
+  constructor(private options: NodeRouterOptions = {}) {
+    super();
+  }
+  private prepareRequest(
+    req: Req,
+    res: Res,
+    findResult: FindResult<RequestHandler<Req, Res>>
+  ) {
+    if (this.options.attachParams) {
+      // @ts-expect-error: this might not be defined
+      // we are adding to it if it does not exist
+      req.params = Object.assign(req.params || {}, findResult.params);
+    }
+  }
   async run(req: Req, res: Res) {
-    const { fns } = this.find(
+    const result = this.find(
       req.method as HttpMethod,
       getPathname(req.url as string)
     );
-    if (!fns.length) return;
-    return Router.exec(fns, req, res);
+    if (!result.fns.length) return;
+    this.prepareRequest(req, res, result);
+    return Router.exec(result.fns, req, res);
   }
   handler(options?: HandlerOptions<RequestHandler<Req, Res>>) {
     const onNoMatch = options?.onNoMatch || onnomatch;
     const onError = options?.onError || onerror;
     return async (req: Req, res: Res) => {
-      const { fns, middleOnly } = this.find(
+      const result = this.find(
         req.method as HttpMethod,
         getPathname(req.url as string)
       );
+      this.prepareRequest(req, res, result);
       try {
-        if (fns.length === 0 || middleOnly) {
+        if (result.fns.length === 0 || result.middleOnly) {
           await onNoMatch(req, res);
         } else {
-          await Router.exec(fns, req, res);
+          await Router.exec(result.fns, req, res);
         }
       } catch (err) {
         await onError(err, req, res);
@@ -58,6 +79,6 @@ export function getPathname(url: string) {
 export function createRouter<
   Req extends IncomingMessage,
   Res extends ServerResponse
->() {
-  return new NodeRouter<Req, Res>();
+>(options: NodeRouterOptions = {}) {
+  return new NodeRouter<Req, Res>(options);
 }
