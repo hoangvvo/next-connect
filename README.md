@@ -8,6 +8,9 @@
 
 The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) and many other frameworks.
 
+> **Warning**
+> v1 is a complete rewrite of v0 and is not backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
+
 ## Features
 
 - [Koa](https://koajs.com/)-like Async middleware
@@ -24,9 +27,9 @@ npm install next-connect@next
 
 ## Usage
 
-Although `next-connect` is initially written for Next.js, it can be used in [http server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener), [Vercel](https://vercel.com/docs/concepts/functions/serverless-functions). See [Examples](./examples/) for more integrations.
-
-See an example in [nextjs-mongodb-app](https://github.com/hoangvvo/nextjs-mongodb-app) (CRUD, Authentication with Passport, and more.
+> **Note**
+>
+> Although `next-connect` is initially written for Next.js, it can be used in [http server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener), [Vercel](https://vercel.com/docs/concepts/functions/serverless-functions). See [Examples](./examples/) for more integrations.
 
 Below are some use cases.
 
@@ -221,7 +224,8 @@ router.get((req, res, next) => {
 });
 ```
 
-**Note:** You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). For example, having a `router.put("/api/foo", handler)` inside `page/api/index.js` _does not_ serve that handler at `/api/foo`.
+> **Note**
+> You should understand Next.js [file-system based routing](https://nextjs.org/docs/routing/introduction). For example, having a `router.put("/api/foo", handler)` inside `page/api/index.js` _does not_ serve that handler at `/api/foo`.
 
 ### router.all(pattern, ...fns)
 
@@ -247,7 +251,8 @@ function onError(err, req, res) {
 export default router.handler({ onError });
 ```
 
-**Note:** exposing the error stack by default is a security risk, consider defining a custom one like the above to mitigate the risk.
+> **Warning**
+> The default option prints the error stack, which might be a security risk. Consider defining a custom one like the above to mitigate the risk.
 
 **options.onNoMatch**
 
