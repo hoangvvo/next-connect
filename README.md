@@ -320,7 +320,7 @@ router
 // GOOD
 router
   .use(async (req, res, next) => {
-    await next(); // next() is await, so errors are caught properly
+    await next(); // next() is awaited, so errors are caught properly
   })
   .use((req, res, next) => {
     return next(); // this works as well since we forward the rejected promise
@@ -456,7 +456,7 @@ While this allows quick migration from Express.js, consider seperating routes in
 <details>
 <summary>Middleware wrapper</summary>
 
-Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, which is by calling the `next(err?)`, we can build a wrapper like the below:
+Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, we can build a wrapper like the below:
 
 ```js
 import someExpressMiddleware from "some-express-middleware";
