@@ -10,6 +10,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: npm
+          node-version: "18.4"
       - run:
           command: npm run test
           name: Run tests

@@ -79,12 +79,82 @@ router
 // create a handler from router with custom
 // onError and onNoMatch
 export default router.handler({
-  onError: (err, req, res, next) => {
+  onError: (err, req, res) => {
     console.error(err.stack);
     res.status(500).end("Something broke!");
   },
   onNoMatch: (req, res) => {
     res.status(404).end("Page is not found");
+  },
+});
+```
+
+### Next.js Edge API Routes (Beta)
+
+Edge Router can be used in [Edge Runtime](https://nextjs.org/docs/api-reference/edge-runtime)
+
+```ts
+import type { NextFetchEvent, NextRequest } from "next/server";
+import { createEdgeRouter } from "next-connect";
+
+// Default Req and Evt are Request and unknown
+// You may want to pass in NextApiRequest and NextApiResponse
+const router = createEdgeRouter<NextRequest, NextFetchEvent>();
+
+router
+  .use(async (req, evt, next) => {
+    const start = Date.now();
+    await next(); // call next in chain
+    const end = Date.now();
+    console.log(`Request took ${end - start}ms`);
+  })
+  .use(authMiddleware)
+  .get((req, res) => {
+    return new Response("Hello world");
+  })
+  .post(async (req, res) => {
+    // use async/await
+    const user = await insertUser(req.body.user);
+    res.json({ user });
+    return new Response(JSON.stringify({ user }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  })
+  .put(
+    async (req, res, next) => {
+      // You may want to pass in NextApiRequest & { isLoggedIn: true }
+      // in createRouter generics to define this extra property
+      if (!req.isLoggedIn) throw new Error("thrown stuff will be caught");
+      // go to the next in chain
+      return next();
+    },
+    async (req, res) => {
+      const user = await updateUser(req.body.user);
+      return new Response(JSON.stringify({ user }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      });
+    }
+  );
+
+// create a handler from router with custom
+// onError and onNoMatch
+export default router.handler({
+  onError: (err, req, evt) => {
+    console.error(err.stack);
+    return new NextResponse("Something broke!", {
+      status: 500,
+    });
+  },
+  onNoMatch: (req, res) => {
+    return new NextResponse("Page is not found", {
+      status: 404,
+    });
   },
 });
 ```
@@ -138,6 +208,8 @@ export async function getServerSideProps({ req, res }) {
 ```
 
 ## API
+
+The following APIs are rewritten in term of `NodeRouter` (`createRouter`), but they apply to `EdgeRouter` (`createEdgeRouter`) as well.
 
 ### router = createRouter(options)
 

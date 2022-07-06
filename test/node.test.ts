@@ -294,6 +294,18 @@ test("handler() - calls onNoMatch if only middle fns found", async (t) => {
   await createRouter().use("", badFn).use("/foo", badFn).handler()(req, res);
 });
 
+test("handler() - calls onNoMatch if no fns matched (HEAD)", async (t) => {
+  t.plan(2);
+  const req = { url: "/foo/bar", method: "HEAD" } as IncomingMessage;
+  const res = {
+    end(chunk) {
+      t.equal(this.statusCode, 404);
+      t.equal(chunk, undefined);
+    },
+  } as ServerResponse;
+  await createRouter().get("/foo").post("/foo/bar").handler()(req, res);
+});
+
 test("handler() - calls custom onNoMatch if not found", async (t) => {
   t.plan(1);
   await createRouter().handler({
