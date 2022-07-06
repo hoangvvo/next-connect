@@ -19,6 +19,10 @@ const Home: NextPage = () => {
             Next.js + next-connect
           </a>
         </h1>
+        <p className={styles.description}>
+          Get started by running{" "}
+          <code className={styles.code}>npm i next-connect</code>
+        </p>
         <div className={styles.grid}>
           <Link href="/gssp-users">
             <a className={styles.card}>
@@ -42,7 +46,6 @@ const Home: NextPage = () => {
           </Link>
         </div>
       </main>
-
       <footer className={styles.footer}>
         <a
           href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"

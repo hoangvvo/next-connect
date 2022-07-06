@@ -12,7 +12,9 @@ const router = createEdgeRouter<
   NextFetchEvent
 >();
 
-router.get((req) => {
+// edge api route does not parse params
+// so we rely on next-connect this time
+router.get("/api/edge-users/:id", (req) => {
   const users = getUsers(req);
   const user = users.find((user) => user.id === req.params?.id);
   if (!user) {

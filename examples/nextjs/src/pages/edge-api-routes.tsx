@@ -18,36 +18,41 @@ const EdgeApiRoutesPage: NextPage = () => {
           example
         </h1>
         <p>
-          <a href="https://nextjs.org/docs/api-routes/edge-api-routes">
+          <a
+            href="https://nextjs.org/docs/api-routes/edge-api-routes"
+            style={{ color: "#0070f3" }}
+          >
             Edge API Routes
           </a>{" "}
           built with next-connect. Open your devtool (<code>F12</code>) and try
           the following snippets.
         </p>
-        <div>
-          <h2>
-            <code className={styles.code}>POST /api/edge-users</code>
-            <span> - Create a user</span>
-          </h2>
-          <pre className={styles.snippet}>{`await fetch("/api/edge-users", {
+        <h2>
+          <code className={styles.code}>POST /api/edge-users</code>
+          <span> - Create a user</span>
+        </h2>
+        <div className={styles.snippet}>
+          <pre>{`await fetch("/api/edge-users", {
   method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ name: "Jane Doe", age: 18 }),
 }).then((res) => res.json());
 `}</pre>
-          <h2>
-            <code className={styles.code}>GET /api/edge-users</code>
-            <span> - Get all users</span>
-          </h2>
-          <pre
-            className={styles.snippet}
-          >{`await fetch("/api/edge-users").then((res) => res.json());
+        </div>
+        <h2>
+          <code className={styles.code}>GET /api/edge-users</code>
+          <span> - Get all users</span>
+        </h2>
+        <div className={styles.snippet}>
+          <pre>{`await fetch("/api/edge-users").then((res) => res.json());
 `}</pre>
-          <h2>
-            <code className={styles.code}>GET /api/edge-users/:id</code>
-            <span> - Get a single user</span>
-          </h2>
-          <pre className={styles.snippet}>
+        </div>
+        <h2>
+          <code className={styles.code}>GET /api/edge-users/:id</code>
+          <span> - Get a single user</span>
+        </h2>
+        <div className={styles.snippet}>
+          <pre>
             {`await fetch("/api/edge-users/`}
             <span className={styles.code}>some-id</span>
             {`").then(res => res.json());

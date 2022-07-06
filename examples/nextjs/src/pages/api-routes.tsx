@@ -18,36 +18,41 @@ const ApiRoutesPage: NextPage = () => {
           example
         </h1>
         <p>
-          <a href="https://nextjs.org/docs/api-routes/introduction">
+          <a
+            href="https://nextjs.org/docs/api-routes/introduction"
+            style={{ color: "#0070f3" }}
+          >
             API Routes
           </a>{" "}
           built with next-connect. Open your devtool (<code>F12</code>) and try
           the following snippets.
         </p>
-        <div>
-          <h2>
-            <code className={styles.code}>POST /api/users</code>
-            <span> - Create a user</span>
-          </h2>
-          <pre className={styles.snippet}>{`await fetch("/api/users", {
+        <h2>
+          <code className={styles.code}>POST /api/users</code>
+          <span> - Create a user</span>
+        </h2>
+        <div className={styles.snippet}>
+          <pre>{`await fetch("/api/users", {
   method: "POST",
   headers: { "content-type": "application/json" },
   body: JSON.stringify({ name: "Jane Doe", age: 18 }),
 }).then((res) => res.json());
 `}</pre>
-          <h2>
-            <code className={styles.code}>GET /api/users</code>
-            <span> - Get all users</span>
-          </h2>
-          <pre
-            className={styles.snippet}
-          >{`await fetch("/api/users").then((res) => res.json());
+        </div>
+        <h2>
+          <code className={styles.code}>GET /api/users</code>
+          <span> - Get all users</span>
+        </h2>
+        <div className={styles.snippet}>
+          <pre>{`await fetch("/api/users").then((res) => res.json());
 `}</pre>
-          <h2>
-            <code className={styles.code}>GET /api/users/:id</code>
-            <span> - Get a single user</span>
-          </h2>
-          <pre className={styles.snippet}>
+        </div>
+        <h2>
+          <code className={styles.code}>GET /api/users/:id</code>
+          <span> - Get a single user</span>
+        </h2>
+        <div className={styles.snippet}>
+          <pre>
             {`await fetch("/api/users/`}
             <span className={styles.code}>some-id</span>
             {`").then(res => res.json());

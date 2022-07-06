@@ -35,6 +35,27 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
           </a>{" "}
           Example
         </h1>
+        <p style={{ textAlign: "center", lineHeight: 1.5 }}>
+          Server-rendered app using{" "}
+          <a
+            href="https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props"
+            style={{ color: "#0070f3" }}
+          >
+            getServerSideProps
+          </a>{" "}
+          built with next-connect.
+          <br />
+          This page works just fine{" "}
+          <a
+            href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/javascript/disable"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "#0070f3" }}
+          >
+            without JavaScript
+          </a>
+          !
+        </p>
         <div>
           <h2 style={{ textAlign: "center" }}>All users</h2>
           <div className={styles.grid}>
@@ -75,18 +96,6 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
             <button className={styles.button} type="submit">
               Submit
             </button>
-            <small style={{ marginTop: "2rem" }}>
-              This page works without JavaScript. Try{" "}
-              <a
-                href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide-chromium/javascript/disable"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#0070f3" }}
-              >
-                disabling
-              </a>{" "}
-              it!
-            </small>
           </form>
         </div>
       </main>

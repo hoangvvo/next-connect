@@ -1,5 +1,5 @@
 export const COOKIE_NAME = "nc_users";
-
+export const VIEW_COOKIE_NAME = "view_count";
 export interface User {
   id: string;
   name: string;
