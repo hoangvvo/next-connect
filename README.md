@@ -98,7 +98,7 @@ import type { NextFetchEvent, NextRequest } from "next/server";
 import { createEdgeRouter } from "next-connect";
 
 // Default Req and Evt are Request and unknown
-// You may want to pass in NextApiRequest and NextApiResponse
+// You may want to pass in NextRequest and NextFetchEvent
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
 router
@@ -123,24 +123,15 @@ router
       },
     });
   })
-  .put(
-    async (req, res, next) => {
-      // You may want to pass in NextApiRequest & { isLoggedIn: true }
-      // in createRouter generics to define this extra property
-      if (!req.isLoggedIn) throw new Error("thrown stuff will be caught");
-      // go to the next in chain
-      return next();
-    },
-    async (req, res) => {
-      const user = await updateUser(req.body.user);
-      return new Response(JSON.stringify({ user }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-      });
-    }
-  );
+  .put(async (req, res) => {
+    const user = await updateUser(req.body.user);
+    return new Response(JSON.stringify({ user }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  });
 
 // create a handler from router with custom
 // onError and onNoMatch
