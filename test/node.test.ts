@@ -322,19 +322,10 @@ test("handler() - calls onError if custom onNoMatch throws", async (t) => {
   );
 });
 
-test("prepareRequest() - attach params if options.params is true", async (t) => {
+test("prepareRequest() - attach params", async (t) => {
   const req = {} as IncomingMessage;
-  const ctx = createRouter().get("/hello/:name");
-  // @ts-expect-error: internal
-  ctx.prepareRequest(
-    req,
-    {} as ServerResponse,
-    ctx.find("GET", "/hello/world")
-  );
-  // @ts-expect-error: extra prop
-  t.equal(req.params, undefined, "params are not attached");
 
-  const ctx2 = createRouter({ attachParams: true }).get("/hello/:name");
+  const ctx2 = createRouter().get("/hello/:name");
   // @ts-expect-error: internal
   ctx2.prepareRequest(
     req,
@@ -345,7 +336,7 @@ test("prepareRequest() - attach params if options.params is true", async (t) => 
   t.same(req.params, { name: "world" }, "params are attached");
 
   const reqWithParams = {
-    params: { goodbye: "world" },
+    params: { age: "20" },
   };
   // @ts-expect-error: internal
   ctx2.prepareRequest(
@@ -355,8 +346,23 @@ test("prepareRequest() - attach params if options.params is true", async (t) => 
   );
   t.same(
     reqWithParams.params,
-    { name: "world", goodbye: "world" },
+    { name: "world", age: "20" },
     "params are merged"
+  );
+
+  const reqWithParams2 = {
+    params: { name: "sunshine" },
+  };
+  // @ts-expect-error: internal
+  ctx2.prepareRequest(
+    reqWithParams2 as unknown as IncomingMessage,
+    {} as ServerResponse,
+    ctx2.find("GET", "/hello/world")
+  );
+  t.same(
+    reqWithParams2.params,
+    { name: "sunshine" },
+    "params are merged (existing takes precedence)"
   );
 });
 
