@@ -11,13 +11,13 @@ The promise-based method routing and middleware layer for [Next.js](https://next
 > **Warning**
 > v1 is a complete rewrite of v0 and is not backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
 
-> [v0](https://github.com/hoangvvo/next-connect/tree/v0), which is written to be compatible with Express.js middleware, is still maintained with bug fixes. [v1] drops explicit support for Express.js middleware, but still provide a way to use them through a wrapper (see below)
+> [v0](https://github.com/hoangvvo/next-connect/tree/v0), which is written to be compatible with Express.js middleware, is still maintained with bug fixes. v1 drops explicit support for Express.js middleware, but still provide a way to use them through a wrapper (see below)
 
 ## Features
 
-- [Koa](https://koajs.com/)-like Async middleware
-- Lightweight => Suitable for serverless environment
-- 5x faster than Express.js with no overhead. Compatible with Express.js via [a wrapper](#expressjs-compatibility).
+- Async middleware
+- [Lightweight](https://bundlephobia.com/scan-results?packages=express,next-connect,koa,micro) => Suitable for serverless environment
+- [way faster](https://github.com/hoangvvo/next-connect/tree/main/bench) than Express.js. Compatible with Express.js via [a wrapper](#expressjs-compatibility).
 - Works with async handlers (with error catching)
 - TypeScript support
 
