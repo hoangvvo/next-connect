@@ -114,15 +114,11 @@ const router = createRouter()
       // https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props#notfound
       return { props: { notFound: true } };
     }
-    return {
-      props: { user, updated: true },
-    };
+    return { props: { user } };
   })
   .post(async (req, res) => {
     const user = await updateUser(req);
-    return {
-      props: { user, updated: true },
-    };
+    return { props: { user, updated: true } };
   });
 
 export async function getServerSideProps({ req, res }) {
@@ -214,7 +210,7 @@ router.post("/api/users", (req, res, next) => {
 });
 router.put("/api/user/:id", (req, res, next) => {
   // https://nextjs.org/docs/routing/dynamic-routes
-  res.end(`User ${req.query.id} updated`);
+  res.end(`User ${req.params.id} updated`);
 });
 
 // Next.js already handles routing (including dynamic routes), we often
@@ -238,7 +234,7 @@ Create a handler to handle incoming requests.
 **options.onError**
 
 Accepts a function as a catch-all error handler; executed whenever a handler throws an error.
-By default, it responds with status code `500` and an error stack if any.
+By default, it responds with a generic `500 Internal Server Error` while logging the error to `console`.
 
 ```javascript
 function onError(err, req, res) {
@@ -250,9 +246,6 @@ function onError(err, req, res) {
 
 export default router.handler({ onError });
 ```
-
-> **Warning**
-> The default option prints the error stack, which might be a security risk. Consider defining a custom one like the above to mitigate the risk.
 
 **options.onNoMatch**
 
@@ -367,11 +360,11 @@ export default createRouter().use(a).use(b);
 
 // api/foo.js
 import router from "api-libs/base";
-export default router.get(x);
+export default router.get(x).handler();
 
 // api/bar.js
 import router from "api-libs/base";
-export default router.get(y);
+export default router.get(y).handler();
 ```
 
 This is because, in each API Route, the same router instance is mutated, leading to undefined behaviors.
@@ -383,11 +376,11 @@ export default createRouter().use(a).use(b);
 
 // api/foo.js
 import router from "api-libs/base";
-export default router.clone().get(x);
+export default router.clone().get(x).handler();
 
 // api/bar.js
 import router from "api-libs/base";
-export default router.clone().get(y);
+export default router.clone().get(y).handler();
 ```
 
 3. **DO NOT** use response function like `res.(s)end` or `res.redirect` inside `getServerSideProps`.

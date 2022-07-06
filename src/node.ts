@@ -39,9 +39,9 @@ export class NodeRouter<
     this.prepareRequest(req, res, result);
     return Router.exec(result.fns, req, res);
   }
-  handler(options?: HandlerOptions<RequestHandler<Req, Res>>) {
-    const onNoMatch = options?.onNoMatch || onnomatch;
-    const onError = options?.onError || onerror;
+  handler(options: HandlerOptions<RequestHandler<Req, Res>> = {}) {
+    const onNoMatch = options.onNoMatch || onnomatch;
+    const onError = options.onError || onerror;
     return async (req: Req, res: Res) => {
       const result = this.find(
         req.method as HttpMethod,
@@ -67,8 +67,8 @@ function onnomatch(req: IncomingMessage, res: ServerResponse) {
 }
 function onerror(err: unknown, req: IncomingMessage, res: ServerResponse) {
   res.statusCode = 500;
-  // @ts-expect-error: we render regardless
-  res.end(err?.stack);
+  console.error(err);
+  res.end("Internal Server Error");
 }
 
 export function getPathname(url: string) {
