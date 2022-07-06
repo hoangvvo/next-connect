@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.0-next.2
+
+- Edge Runtime Router by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/200
+
+## 1.0.0-next.1
+
+- security: always return generic 500 error by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/197
+- Always attach req.params by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/198
+- Add benchmark and update readme by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/199
+
 ## 1.0.0-next.0
 
 See https://github.com/hoangvvo/next-connect/releases/tag/v1.0.0-next.0.
