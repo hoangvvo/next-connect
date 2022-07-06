@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { test } from "tap";
+import { spyOn } from "tinyspy";
 import { createRouter, getPathname, NodeRouter } from "../src/node.js";
 
 const METHODS = ["GET", "HEAD", "PATCH", "DELETE", "POST", "PUT"];
@@ -157,67 +158,77 @@ test("handler() - handles incoming (async)", async (t) => {
 });
 
 test("handler() - calls onError if error thrown (sync)", async (t) => {
-  t.plan(9);
+  t.plan(3 * 3);
+  const error = new Error("💥");
+  const consoleSpy = spyOn(globalThis.console, "error", () => undefined);
+
+  const badFn = () => t.fail("test error");
   const baseFn = (req: IncomingMessage, res: ServerResponse, next: any) => {
     res.statusCode = 200;
     return next();
   };
+
+  let idx = 0;
+
   const req = { method: "GET", url: "/" } as IncomingMessage;
   const res = {
     end(chunk) {
-      t.equal(res.statusCode, 500);
-      t.ok(chunk.startsWith("Error: 💥"));
+      t.equal(this.statusCode, 500, "set 500 status code");
+      t.equal(chunk, "Internal Server Error");
+      t.same(consoleSpy.calls[idx], [error], `called console.error ${idx}`);
+      idx += 1;
     },
   } as ServerResponse;
-  await t.resolves(
-    createRouter()
-      .use(baseFn)
-      .use(() => {
-        throw new Error("💥");
-      })
-      .get(() => {
-        t.fail("test error");
-      })
-      .handler()(req, res),
-    "to resolve"
-  );
-  await t.resolves(
-    createRouter()
-      .use(baseFn)
-      .use((req, res, next) => {
-        next();
-      })
-      .get(() => {
-        throw new Error("💥");
-      })
-      .handler()(req, res),
-    "to resolve"
-  );
+  await createRouter()
+    .use(baseFn)
+    .use(() => {
+      throw error;
+    })
+    .get(badFn)
+    .handler()(req, res);
+  await createRouter()
+    .use(baseFn)
+    .use((req, res, next) => {
+      next();
+    })
+    .get(() => {
+      throw error;
+    })
+    .handler()(req, res);
+
   const res2 = {
     end(chunk) {
       t.equal(res.statusCode, 500);
-      t.equal(chunk, undefined);
+      t.equal(chunk, "Internal Server Error");
+      t.same(consoleSpy.calls[idx], [""], `called console.error with ""`);
     },
   } as ServerResponse;
-  await t.resolves(
-    createRouter()
-      .use(baseFn)
-      .get(() => {
-        // non error throw
-        throw "";
-      })
-      .handler()(req, res2),
-    "to resolve"
-  );
+  await createRouter()
+    .use(baseFn)
+    .get(() => {
+      // non error throw
+      throw "";
+    })
+    .handler()(req, res2);
+
+  consoleSpy.restore();
 });
 
 test("handler() - calls onError if error thrown (async)", async (t) => {
-  t.plan(6);
+  t.plan(2 * 3);
+  const error = new Error("💥");
+  const consoleSpy = spyOn(globalThis.console, "error", () => undefined);
+
+  const badFn = () => t.fail("test error");
+
   const req = { method: "GET", url: "/" } as IncomingMessage;
+  let idx = 0;
   const res = {
     end(chunk) {
       t.equal(this.statusCode, 500);
-      t.ok(chunk.startsWith("Error: 💥"));
+      t.equal(chunk, "Internal Server Error");
+      t.same(consoleSpy.calls[idx], [error], `called console.error ${idx}`);
+      idx += 1;
     },
   } as ServerResponse;
   const baseFn = async (
@@ -228,47 +239,38 @@ test("handler() - calls onError if error thrown (async)", async (t) => {
     res.statusCode = 200;
     return next();
   };
-  await t.resolves(
-    createRouter()
-      .use(baseFn)
-      .use(async () => {
-        return Promise.reject(new Error("💥"));
-      })
-      .get(() => {
-        t.fail("test error");
-      })
-      .handler()(req, res),
-    "to resolve"
-  );
-  await t.resolves(
-    createRouter()
-      .use(baseFn)
-      .get(() => {
-        throw new Error("💥");
-      })
-      .handler()(req, res),
-    "to resolve"
-  );
+  await createRouter()
+    .use(baseFn)
+    .use(async () => {
+      return Promise.reject(error);
+    })
+    .get(badFn)
+    .handler()(req, res);
+  await createRouter()
+    .use(baseFn)
+    .get(() => {
+      throw error;
+    })
+    .handler()(req, res);
+
+  consoleSpy.restore();
 });
 
 test("handler() - calls custom onError", async (t) => {
-  t.plan(2);
-  await t.resolves(
-    createRouter()
-      .get(() => {
-        throw new Error("💥");
-      })
-      .handler({
-        onError(err) {
-          t.equal((err as Error).message, "💥");
-        },
-      })({ method: "GET", url: "/" } as IncomingMessage, {} as ServerResponse),
-    "to resolve"
-  );
+  t.plan(1);
+  await createRouter()
+    .get(() => {
+      throw new Error("💥");
+    })
+    .handler({
+      onError(err) {
+        t.equal((err as Error).message, "💥");
+      },
+    })({ method: "GET", url: "/" } as IncomingMessage, {} as ServerResponse);
 });
 
 test("handler() - calls onNoMatch if no fns matched", async (t) => {
-  t.plan(3);
+  t.plan(2);
   const req = { url: "/foo/bar", method: "GET" } as IncomingMessage;
   const res = {
     end(chunk) {
@@ -276,13 +278,12 @@ test("handler() - calls onNoMatch if no fns matched", async (t) => {
       t.equal(chunk, "Route GET /foo/bar not found");
     },
   } as ServerResponse;
-  await t.resolves(
-    createRouter().get("/foo").post("/foo/bar").handler()(req, res)
-  );
+  await createRouter().get("/foo").post("/foo/bar").handler()(req, res);
 });
 
 test("handler() - calls onNoMatch if only middle fns found", async (t) => {
-  t.plan(3);
+  t.plan(2);
+  const badFn = () => t.fail("test error");
   const req = { url: "/foo/bar", method: "GET" } as IncomingMessage;
   const res = {
     end(chunk) {
@@ -290,46 +291,34 @@ test("handler() - calls onNoMatch if only middle fns found", async (t) => {
       t.equal(chunk, "Route GET /foo/bar not found");
     },
   } as ServerResponse;
-  await t.resolves(
-    createRouter()
-      .use("", (req, res, next) => {
-        t.fail("test error");
-        next();
-      })
-      .use("/foo", () => t.fail("test error"))
-      .handler()(req, res)
-  );
+  await createRouter().use("", badFn).use("/foo", badFn).handler()(req, res);
 });
 
 test("handler() - calls custom onNoMatch if not found", async (t) => {
-  t.plan(2);
-  await t.resolves(
-    createRouter().handler({
-      onNoMatch() {
-        t.pass("onNoMatch called");
-      },
-    })(
-      { url: "/foo/bar", method: "GET" } as IncomingMessage,
-      {} as ServerResponse
-    )
+  t.plan(1);
+  await createRouter().handler({
+    onNoMatch() {
+      t.pass("onNoMatch called");
+    },
+  })(
+    { url: "/foo/bar", method: "GET" } as IncomingMessage,
+    {} as ServerResponse
   );
 });
 
 test("handler() - calls onError if custom onNoMatch throws", async (t) => {
-  t.plan(3);
-  await t.resolves(
-    createRouter().handler({
-      onNoMatch() {
-        t.pass("onNoMatch called");
-        throw new Error("💥");
-      },
-      onError(err) {
-        t.equal((err as Error).message, "💥");
-      },
-    })(
-      { url: "/foo/bar", method: "GET" } as IncomingMessage,
-      {} as ServerResponse
-    )
+  t.plan(2);
+  await createRouter().handler({
+    onNoMatch() {
+      t.pass("onNoMatch called");
+      throw new Error("💥");
+    },
+    onError(err) {
+      t.equal((err as Error).message, "💥");
+    },
+  })(
+    { url: "/foo/bar", method: "GET" } as IncomingMessage,
+    {} as ServerResponse
   );
 });
 
