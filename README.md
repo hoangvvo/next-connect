@@ -11,6 +11,8 @@ The promise-based method routing and middleware layer for [Next.js](https://next
 > **Warning**
 > v1 is a complete rewrite of v0 and is not backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
 
+> [v0](https://github.com/hoangvvo/next-connect/tree/v0), which is written to be compatible with Express.js middleware, is still maintained with bug fixes. [v1] drops explicit support for Express.js middleware, but still provide a way to use them through a wrapper (see below)
+
 ## Features
 
 - [Koa](https://koajs.com/)-like Async middleware
@@ -446,7 +448,7 @@ Express middleware is not built around promises but callbacks. This prevents it 
 ```js
 import someExpressMiddleware from "some-express-middleware";
 
-const withExpressMiddleware = (middleware) => {
+const expressWrapper = (middleware) => {
   return async (req, res, next) => {
     await new Promise((resolve, reject) => {
       middleware(req, res, (err) => (err ? reject(err) : resolve()));
@@ -455,7 +457,7 @@ const withExpressMiddleware = (middleware) => {
   };
 };
 
-router.use(withExpressMiddleware(someExpressMiddleware));
+router.use(expressWrapper(someExpressMiddleware));
 ```
 
 </details>

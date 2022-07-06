@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-next.0
+
+See https://github.com/hoangvvo/next-connect/releases/tag/v1.0.0-next.0.
+
 ## 0.12.2
 
 - Add back next() in error handler
