@@ -141,19 +141,6 @@ export async function getServerSideProps({ req, res }) {
 
 Create an instance Node.js router.
 
-**options.attachParams**
-
-Passing `true` will attach params object to req. By default, `next-connect` does not set to req.params. If `req.params` already exists, it [Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) into `req.params`.
-
-```js
-const router = createRouter({ attachParams: true });
-
-router.get("/users/:userId/posts/:postId", (req, res) => {
-  // Visiting '/users/12/posts/23' will render '{"userId":"12","postId":"23"}'
-  res.send(req.params);
-});
-```
-
 ### router.use(base, ...fn)
 
 `base` (optional) - match all routes to the right of `base` or match all if omitted. (Note: If used in Next.js, this is often omitted)

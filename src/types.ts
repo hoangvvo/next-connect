@@ -20,7 +20,3 @@ export interface HandlerOptions<Handler extends FunctionLike> {
   onNoMatch?: Handler;
   onError?: (err: unknown, ...args: Parameters<Handler>) => ReturnType<Handler>;
 }
-
-export interface NodeRouterOptions {
-  attachParams?: boolean;
-}

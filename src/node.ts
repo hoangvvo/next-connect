@@ -1,11 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { Router } from "./router.js";
-import type {
-  FindResult,
-  HandlerOptions,
-  HttpMethod,
-  NodeRouterOptions,
-} from "./types.js";
+import type { FindResult, HandlerOptions, HttpMethod } from "./types.js";
 
 export type RequestHandler<
   Req extends IncomingMessage,
@@ -16,19 +11,18 @@ export class NodeRouter<
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse
 > extends Router<RequestHandler<Req, Res>> {
-  constructor(private options: NodeRouterOptions = {}) {
+  constructor() {
     super();
   }
   private prepareRequest(
-    req: Req,
+    req: Req & { params?: Record<string, unknown> },
     res: Res,
     findResult: FindResult<RequestHandler<Req, Res>>
   ) {
-    if (this.options.attachParams) {
-      // @ts-expect-error: this might not be defined
-      // we are adding to it if it does not exist
-      req.params = Object.assign(req.params || {}, findResult.params);
-    }
+    req.params = {
+      ...findResult.params,
+      ...req.params, // original params will take precedence
+    };
   }
   async run(req: Req, res: Res) {
     const result = this.find(
@@ -79,6 +73,6 @@ export function getPathname(url: string) {
 export function createRouter<
   Req extends IncomingMessage,
   Res extends ServerResponse
->(options: NodeRouterOptions = {}) {
-  return new NodeRouter<Req, Res>(options);
+>() {
+  return new NodeRouter<Req, Res>();
 }
