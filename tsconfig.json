@@ -3,7 +3,8 @@
   "compilerOptions": {
     "isolatedModules": true,
     "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2020", "DOM"]
   },
   "include": ["./src/**/*"],
   "ts-node": {

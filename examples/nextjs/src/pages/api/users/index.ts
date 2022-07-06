@@ -1,12 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
-import type { User } from "../../../utils/api";
-import {
-  getUsers,
-  randomId,
-  saveUsers,
-  validateUser,
-} from "../../../utils/api";
+import { getUsers, randomId, saveUsers } from "../../../utils/api";
+import type { User } from "../../../utils/common";
+import { validateUser } from "../../../utils/common";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -40,7 +36,7 @@ router.all((req, res) => {
 
 export default router.handler({
   onError(err, req, res) {
-    res.json({
+    res.status(500).json({
       error: (err as Error).message,
     });
   },

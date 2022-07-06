@@ -1,11 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { Router } from "./router.js";
-import type { FindResult, HandlerOptions, HttpMethod } from "./types.js";
+import type {
+  FindResult,
+  HandlerOptions,
+  HttpMethod,
+  ValueOrPromise,
+} from "./types.js";
 
 export type RequestHandler<
   Req extends IncomingMessage,
   Res extends ServerResponse
-> = (req: Req, res: Res) => void | Promise<void>;
+> = (req: Req, res: Res) => ValueOrPromise<void>;
 
 export class NodeRouter<
   Req extends IncomingMessage = IncomingMessage,
@@ -57,7 +62,11 @@ export class NodeRouter<
 
 function onnomatch(req: IncomingMessage, res: ServerResponse) {
   res.statusCode = 404;
-  res.end(req.method !== "HEAD" && `Route ${req.method} ${req.url} not found`);
+  res.end(
+    req.method !== "HEAD"
+      ? `Route ${req.method} ${req.url} not found`
+      : undefined
+  );
 }
 function onerror(err: unknown, req: IncomingMessage, res: ServerResponse) {
   res.statusCode = 500;

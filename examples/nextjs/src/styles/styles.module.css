@@ -1,15 +1,20 @@
 .container {
-  padding: 0 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0 0.5rem;
+  flex-direction: column;
 }
 
 .main {
-  min-height: 100vh;
-  padding: 4rem 0;
-  flex: 1;
-  display: flex;
+  padding: 5rem 0;
+  flex: 1 1;
   flex-direction: column;
+  display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .footer {
@@ -42,7 +47,7 @@
 .title {
   margin: 0;
   line-height: 1.15;
-  font-size: 2rem;
+  font-size: 4rem;
   margin-bottom: 1rem;
 }
 
@@ -52,7 +57,7 @@
 }
 
 .description {
-  margin: 4rem 0;
+  margin: 1rem 0;
   line-height: 1.5;
   font-size: 1.5rem;
 }
@@ -71,7 +76,8 @@
   font-size: 0.9rem;
   font-family: monospace;
   display: block;
-  margin: 1rem 0 2rem;
+  max-width: 100%;
+  overflow-y: scroll;
 }
 
 .grid {

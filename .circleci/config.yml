@@ -5,9 +5,13 @@ orbs:
 
 jobs:
   build_and_test:
-    executor: node/default
+    docker:
+      - image: "cimg/base:stable"
     steps:
       - checkout
+      - node/install:
+          install-yarn: false
+          node-version: "18.4"
       - node/install-packages:
           pkg-manager: npm
       - run:
