@@ -28,10 +28,7 @@
   "types": "./dist/types/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build:esm": "tsc --outDir ./dist/esm",
-    "build:commonjs": "tsc --outDir ./dist/commonjs --module commonjs && node ./scripts/rename-cjs-extenstion.js ./dist/commonjs",
-    "build:types": "tsc --outDir ./dist/types --declaration --emitDeclarationOnly",
-    "build": "npm run build:esm && npm run build:commonjs && npm run build:types",
+    "build": "tscd --entry index.js",
     "test": "c8 tap",
     "prepublishOnly": "npm run clean && npm run test && npm run build",
     "coverage": "c8 report --reporter=lcov",
@@ -63,6 +60,7 @@
     "tap": "^16.3.0",
     "tinyspy": "^1.0.0",
     "ts-node": "^10.8.1",
+    "tscd": "^0.0.3",
     "typescript": "^4.7.4"
   },
   "tap": {

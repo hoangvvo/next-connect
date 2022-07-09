@@ -202,7 +202,7 @@ export async function getServerSideProps({ req, res }) {
 
 The following APIs are rewritten in term of `NodeRouter` (`createRouter`), but they apply to `EdgeRouter` (`createEdgeRouter`) as well.
 
-### router = createRouter(options)
+### router = createRouter()
 
 Create an instance Node.js router.
 

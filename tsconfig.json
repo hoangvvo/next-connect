@@ -4,7 +4,9 @@
     "isolatedModules": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2020", "DOM"]
+    "lib": ["ES2020", "DOM"],
+    "outDir": "dist",
+    "declaration": false
   },
   "include": ["./src/**/*"],
   "ts-node": {
