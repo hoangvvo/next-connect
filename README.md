@@ -168,6 +168,16 @@ export default function Page({ user, updated }) {
 
 const router = createRouter()
   .use(async (req, res, next) => {
+    // this serve as the error handling middleware
+    try {
+      return await next();
+    } catch (e) {
+      return {
+        props: { error: e.message },
+      };
+    }
+  })
+  .use(async (req, res, next) => {
     logRequest(req);
     return next();
   })
@@ -185,16 +195,7 @@ const router = createRouter()
   });
 
 export async function getServerSideProps({ req, res }) {
-  try {
-    // we await here so that the error can be caught below
-    // rather than propagate to the outer layer
-    return await router.run(req, res);
-  } catch (e) {
-    // handle the error
-    return {
-      props: { error: e.message },
-    };
-  }
+  return router.run(req, res);
 }
 ```
 
@@ -332,7 +333,17 @@ console.log(await router.run(req, res));
 // The above will print "6"
 ```
 
-This can be useful in [`getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering).
+If an error in thrown within the chain, `router.run` will reject. You can also add a try-catch in the first middleware to catch the error before it rejects the `.run()` call:
+
+```js
+router
+  .use(async (req, res, next) => {
+    return next().catch(errorHandler);
+  })
+  .use(thisMiddlewareMightThrow);
+
+await router.run(req, res);
+```
 
 ## Common errors
 
