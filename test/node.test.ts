@@ -2,15 +2,22 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { test } from "tap";
 import { spyOn } from "tinyspy";
 import { createRouter, getPathname, NodeRouter } from "../src/node.js";
+import { Router } from "../src/router.js";
+
+type AnyHandler = (...args: any[]) => any;
+
+const noop: AnyHandler = async () => {
+  /** noop */
+};
 
 const METHODS = ["GET", "HEAD", "PATCH", "DELETE", "POST", "PUT"];
 
 test("internals", (t) => {
   const ctx = new NodeRouter();
-  t.ok(ctx instanceof NodeRouter, "creates new `Router` instance");
-  t.ok(Array.isArray(ctx.routes), "~> has `routes` key (Array)");
-  t.type(ctx.add, "function", "~> has `add` method");
-  t.type(ctx.find, "function", "~> has `find` method");
+  t.ok(ctx instanceof NodeRouter, "creates new `NodeRouter` instance");
+  // @ts-expect-error: internal
+  t.ok(ctx.router instanceof Router, "~> has a `Router` instance");
+
   t.type(ctx.all, "function", "~> has `all` method");
   METHODS.forEach((str) => {
     t.type(ctx[str.toLowerCase()], "function", `~> has \`${str}\` method`);
@@ -20,6 +27,41 @@ test("internals", (t) => {
 
 test("createRouter() returns an instance", async (t) => {
   t.ok(createRouter() instanceof NodeRouter);
+});
+
+test("add()", async (t) => {
+  const ctx = new NodeRouter();
+  // @ts-expect-error: private property
+  const routerAddStub = spyOn(ctx.router, "add");
+  // @ts-expect-error: private property
+  const returned = ctx.add("GET", "/", noop);
+  t.same(routerAddStub.calls, [["GET", "/", noop]], "call router.add()");
+  t.equal(returned, ctx, "returned itself");
+});
+
+test("clone()", (t) => {
+  const ctx = new NodeRouter();
+  // @ts-expect-error: private property
+  ctx.router.routes = [noop, noop] as any[];
+  t.ok(ctx.clone() instanceof NodeRouter, "is a NodeRouter instance");
+  t.not(ctx, ctx.clone(), "not the same identity");
+  // @ts-expect-error: private property
+  t.not(ctx.router, ctx.clone().router, "not the same router identity");
+  t.not(
+    // @ts-expect-error: private property
+    ctx.router.routes,
+    // @ts-expect-error: private property
+    ctx.clone().router.routes,
+    "routes are deep cloned (identity)"
+  );
+  t.same(
+    // @ts-expect-error: private property
+    ctx.router.routes,
+    // @ts-expect-error: private property
+    ctx.clone().router.routes,
+    "routes are deep cloned"
+  );
+  t.end();
 });
 
 test("run() - runs req and res through fns and return last value", async (t) => {
@@ -342,7 +384,8 @@ test("prepareRequest() - attach params", async (t) => {
   ctx2.prepareRequest(
     req,
     {} as ServerResponse,
-    ctx2.find("GET", "/hello/world")
+    // @ts-expect-error: internal
+    ctx2.router.find("GET", "/hello/world")
   );
   // @ts-expect-error: extra prop
   t.same(req.params, { name: "world" }, "params are attached");
@@ -354,7 +397,8 @@ test("prepareRequest() - attach params", async (t) => {
   ctx2.prepareRequest(
     reqWithParams as unknown as IncomingMessage,
     {} as ServerResponse,
-    ctx2.find("GET", "/hello/world")
+    // @ts-expect-error: internal
+    ctx2.router.find("GET", "/hello/world")
   );
   t.same(
     reqWithParams.params,
@@ -369,7 +413,8 @@ test("prepareRequest() - attach params", async (t) => {
   ctx2.prepareRequest(
     reqWithParams2 as unknown as IncomingMessage,
     {} as ServerResponse,
-    ctx2.find("GET", "/hello/world")
+    // @ts-expect-error: internal
+    ctx2.router.find("GET", "/hello/world")
   );
   t.same(
     reqWithParams2.params,

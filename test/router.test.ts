@@ -9,11 +9,9 @@ import type { HttpMethod, Nextable } from "../src/types.js";
 
 type AnyHandler = (...args: any[]) => any;
 
-const noop = async () => {
+const noop: AnyHandler = async () => {
   /** noop */
 };
-
-const METHODS = ["GET", "HEAD", "PATCH", "DELETE", "POST", "PUT"];
 
 const testRoute = (
   t: Tap.Test,
@@ -40,10 +38,6 @@ test("internals", (t) => {
   t.ok(Array.isArray(ctx.routes), "~> has `routes` key (Array)");
   t.type(ctx.add, "function", "~> has `add` method");
   t.type(ctx.find, "function", "~> has `find` method");
-  t.type(ctx.all, "function", "~> has `all` method");
-  METHODS.forEach((str) => {
-    t.type(ctx[str.toLowerCase()], "function", `~> has \`${str}\` method`);
-  });
 
   t.end();
 });
@@ -64,7 +58,7 @@ test("add()", (t) => {
     route: "/foo/bar",
   });
 
-  ctx.post("bar", noop);
+  ctx.add("POST", "bar", noop);
   t.equal(
     ctx.routes.length,
     2,
@@ -110,7 +104,7 @@ test("add() - multiple", (t) => {
     isMiddle: false,
   });
 
-  ctx.put("/bar", noop, noop, noop);
+  ctx.add("PUT", "/bar", noop, noop, noop);
   t.same(
     ctx.routes.length,
     2,
@@ -171,7 +165,7 @@ test("use()", (t) => {
 
 test("all()", (t) => {
   const fn: AnyHandler = (req: any) => req.chain++;
-  const ctx = new Router<AnyHandler>().all("/greet/:name", fn);
+  const ctx = new Router<AnyHandler>().add("", "/greet/:name", fn);
   t.same(ctx.routes.length, 1, 'added "ALL /greet/:name" route');
 
   testRoute(t, ctx.routes[0], {
@@ -203,7 +197,7 @@ test("all()", (t) => {
     t.same(req.params.name, "Rick", '~~> still see "params.name" value');
     t.same(req.params.person, "Rick", '~~> receives "params.person" value');
   };
-  ctx.head("/greet/:person", fn2);
+  ctx.add("HEAD", "/greet/:person", fn2);
 
   t.same(ctx.routes.length, 2, 'added "HEAD /greet/:name" route');
 
@@ -239,7 +233,8 @@ test("find()", (t) => {
 
   const ctx = new Router<AnyHandler>();
 
-  ctx.get(
+  ctx.add(
+    "GET",
     "/foo/:title",
     ((req) => {
       t.same(req.chain++, 1, '~> 1st "GET /foo/:title" ran first');
@@ -283,18 +278,18 @@ test("find() - multiple", (t) => {
       isRoot || t.same(req.params.title, "bar", '~~> saw "param.title" value');
       t.same(req.chain++, 0, "~~> ran 1st");
     }) as AnyHandler)
-    .get("/foo", ((req) => {
+    .add("GET", "/foo", ((req) => {
       t.pass('~> ran "GET /foo" route');
       t.same(req.chain++, 1, "~~> ran 2nd");
     }) as AnyHandler)
-    .get("/foo/:title?", ((req) => {
+    .add("GET", "/foo/:title?", ((req) => {
       t.pass('~> ran "GET /foo/:title?" route'); // x2
       isRoot || t.same(req.params.title, "bar", '~~> saw "params.title" value');
       isRoot
         ? t.same(req.chain++, 2, "~~> ran 3rd")
         : t.same(req.chain++, 1, "~~> ran 2nd");
     }) as AnyHandler)
-    .get("/foo/*", ((req) => {
+    .add("GET", "/foo/*", ((req) => {
       t.pass('~> ran "GET /foo/*" route');
       t.same(req.params.wild, "bar", '~~> saw "params.wild" value');
       t.same(req.params.title, "bar", '~~> saw "params.title" value');
@@ -319,16 +314,16 @@ test("find() - multiple", (t) => {
 test("find() - HEAD", (t) => {
   t.plan(5);
   const ctx = new Router<AnyHandler>()
-    .all("/foo", ((req) => {
+    .add("", "/foo", ((req) => {
       t.same(req.chain++, 0, '~> found "ALL /foo" route');
     }) as AnyHandler)
-    .head("/foo", ((req) => {
+    .add("HEAD", "/foo", ((req) => {
       t.same(req.chain++, 1, '~> found "HEAD /foo" route');
     }) as AnyHandler)
-    .get("/foo", ((req) => {
+    .add("GET", "/foo", ((req) => {
       t.same(req.chain++, 2, '~> also found "GET /foo" route');
     }) as AnyHandler)
-    .get("/", () => {
+    .add("GET", "/", () => {
       t.pass("should not run");
     });
 
@@ -343,16 +338,16 @@ test("find() - HEAD", (t) => {
 test("find() - order", (t) => {
   t.plan(5);
   const ctx = new Router<AnyHandler>()
-    .all("/foo", ((req) => {
+    .add("", "/foo", ((req) => {
       t.same(req.chain++, 0, '~> ran "ALL /foo" 1st');
     }) as AnyHandler)
-    .get("/foo", ((req) => {
+    .add("GET", "/foo", ((req) => {
       t.same(req.chain++, 1, '~> ran "GET /foo" 2nd');
     }) as AnyHandler)
-    .head("/foo", ((req) => {
+    .add("HEAD", "/foo", ((req) => {
       t.same(req.chain++, 2, '~> ran "HEAD /foo" 3rd');
     }) as AnyHandler)
-    .get("/", (() => {
+    .add("GET", "/", (() => {
       t.pass("should not run");
     }) as AnyHandler);
 
@@ -370,10 +365,10 @@ test("find() w/ all()", (t) => {
   };
   const find = (x, y) => x.find("GET", y);
 
-  const ctx1 = new Router<AnyHandler>().all("api", noop);
-  const ctx2 = new Router<AnyHandler>().all("api/:version", noop);
-  const ctx3 = new Router<AnyHandler>().all("api/:version?", noop);
-  const ctx4 = new Router<AnyHandler>().all("movies/:title.mp4", noop);
+  const ctx1 = new Router<AnyHandler>().add("", "api", noop);
+  const ctx2 = new Router<AnyHandler>().add("", "api/:version", noop);
+  const ctx3 = new Router<AnyHandler>().add("", "api/:version?", noop);
+  const ctx4 = new Router<AnyHandler>().add("", "movies/:title.mp4", noop);
 
   t.same(find(ctx1, "/api").fns.length, 1, "~> exact match");
   t.same(
@@ -508,7 +503,8 @@ test("find() - regex w/ named groups", (t) => {
   t.plan(9);
   const ctx = new Router<AnyHandler>();
 
-  ctx.get(
+  ctx.add(
+    "GET",
     /^[/]foo[/](?<title>\w+)[/]?$/,
     ((req) => {
       t.same(
@@ -550,18 +546,18 @@ test("find() - multiple regex w/ named groups", (t) => {
       isRoot || t.same(req.params.title, "bar", '~~> saw "params.title" value');
       t.same(req.chain++, 0, "~~> ran 1st");
     }) as AnyHandler)
-    .get("/foo", ((req) => {
+    .add("GET", "/foo", ((req) => {
       t.pass('~> ran "GET /foo" route');
       t.same(req.chain++, 1, "~~> ran 2nd");
     }) as AnyHandler)
-    .get(/^[/]foo(?:[/](?<title>\w+))?[/]?$/, ((req) => {
+    .add("GET", /^[/]foo(?:[/](?<title>\w+))?[/]?$/, ((req) => {
       t.pass('~> ran "GET /^[/]foo[/](?<title>\\w+)?[/]?$/" route'); // x2
       isRoot || t.same(req.params.title, "bar", '~~> saw "params.title" value');
       isRoot
         ? t.same(req.chain++, 2, "~~> ran 3rd")
         : t.same(req.chain++, 1, "~~> ran 2nd");
     }) as AnyHandler)
-    .get(/^[/]foo[/](?<wild>.*)$/, ((req) => {
+    .add("GET", /^[/]foo[/](?<wild>.*)$/, ((req) => {
       t.pass('~> ran "GET /^[/]foo[/](?<wild>.*)$/" route');
       t.same(req.params.wild, "bar", '~~> saw "params.wild" value');
       t.same(req.params.title, "bar", '~~> saw "params.title" value');
@@ -606,11 +602,18 @@ test("constructor() with routes", (t) => {
 
 test("clone()", (t) => {
   const ctx = new Router();
+  ctx.routes = [noop, noop] as any[];
   t.not(ctx, ctx.clone(), "not the same identity");
+  t.ok(ctx.clone() instanceof Router, "is a Router instance");
   t.equal(ctx.clone("/foo").base, "/foo", "cloned with custom base");
 
   const ctxRoutes = new Router("", [noop as any]);
-  t.not(ctxRoutes.clone().routes, ctxRoutes.routes, "routes are deep cloned");
+  t.not(
+    ctxRoutes.clone().routes,
+    ctxRoutes.routes,
+    "routes are deep cloned (identity)"
+  );
+  t.same(ctxRoutes.clone().routes, ctxRoutes.routes, "routes are deep cloned");
 
   t.end();
 });
@@ -678,7 +681,7 @@ test("find() - w/ router with correct match", async (t) => {
   const noop4 = async () => undefined;
 
   const ctx = new Router<AnyHandler>()
-    .get(noop)
+    .add("GET", noop)
     .use(
       "/foo",
       new Router<AnyHandler>()
@@ -768,7 +771,7 @@ test("find() - w/ router with correct match", async (t) => {
   );
 
   t.same(
-    new Router().use(noop).use(new Router().get(noop1)).find("GET", "/"),
+    new Router().use(noop).use(new Router().add("GET", noop1)).find("GET", "/"),
     {
       middleOnly: false,
       params: {},
@@ -879,8 +882,8 @@ test("exec() - execute handlers sequentially", async (t) => {
 test("find() - returns middleOnly", async (t) => {
   const ctx = new Router();
   const fn = () => undefined;
-  ctx.all("/this/will/not/match", fn);
-  ctx.post("/bar", fn);
+  ctx.add("", "/this/will/not/match", fn);
+  ctx.add("POST", "/bar", fn);
   ctx.use("/", fn);
   ctx.use("/foo", fn);
 
