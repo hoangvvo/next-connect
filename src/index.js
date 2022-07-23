@@ -3,7 +3,14 @@ import Trouter from "trouter";
 const onerror = (err, req, res) =>
   (res.statusCode = err.status || 500) && res.end(err.message);
 const isResSent = (res) => res.finished || res.headersSent || res.writableEnded;
-const mount = (fn) => (fn.routes ? fn.handle.bind(fn) : fn);
+const mount = (fn) =>
+  fn.routes ? fn.handle.bind(fn) : attachMethod("USE", fn);
+
+const methodSymbol = Symbol("nc#method");
+function attachMethod(method, fn) {
+  fn[methodSymbol] = method;
+  return fn;
+}
 
 export default function factory({
   onError = onerror,
@@ -18,10 +25,14 @@ export default function factory({
         res.once("finish", resolve);
         if (isResSent(res)) resolve();
       });
-    nc.handle(req, res, (err, next) =>
-      err
-        ? onError(err, req, res, () => next())
-        : !isResSent(res) && onNoMatch(req, res)
+    nc.handle(
+      req,
+      res,
+      (err, next) =>
+        err
+          ? onError(err, req, res, () => next())
+          : !isResSent(res) && onNoMatch(req, res),
+      true
     );
     await finishP;
   }
@@ -31,7 +42,7 @@ export default function factory({
   const _add = Trouter.prototype.add.bind(nc);
   function add(method, base, ...fns) {
     if (typeof base === "function") return add(method, "*", base, ...fns);
-    _add(method, base, ...fns);
+    _add(method, base, ...fns.map((fn) => attachMethod(method, fn)));
     return nc;
   }
   nc.use = function use(base, ...fns) {
@@ -67,12 +78,22 @@ export default function factory({
       this.handle(req, res, (err) => (err ? reject(err) : resolve()));
     });
   };
-  nc.handle = function handle(req, res, done) {
+
+  nc.handle = function handle(req, res, done, isHandler = false) {
     const idx = req.url.indexOf("?");
     const { handlers, params } = _find(
       req.method,
       idx !== -1 ? req.url.substring(0, idx) : req.url
     );
+
+    if (
+      isHandler &&
+      !handlers.some((handler) => handler[methodSymbol] !== "USE")
+    ) {
+      // if all handlers are middleware, we should not run
+      return done();
+    }
+
     if (attachParams) req.params = params;
     let i = 0;
     const len = handlers.length;

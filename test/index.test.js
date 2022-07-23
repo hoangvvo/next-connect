@@ -112,7 +112,7 @@ describe("nc()", () => {
     });
     const app = createServer((req, res) => {
       res.end("quick math", () => {
-        assert(res.finished || res.headersSent, "res.finished must be true")
+        assert(res.finished || res.headersSent, "res.finished must be true");
         handler(req, res).then(done);
       });
     });
@@ -510,7 +510,7 @@ describe("onError", () => {
 });
 
 describe("onNoMatch", () => {
-  it("response with default 404 on no match", () => {
+  it("responds with default 404 on no match", () => {
     const handler = nc();
     handler.post((req, res) => {
       res.end("");
@@ -520,7 +520,20 @@ describe("onNoMatch", () => {
     return request(app).get("/").expect(404);
   });
 
-  it("response with custom 404 on no match", () => {
+  it("responds with 404 if all matches are middleware", () => {
+    const handler = nc();
+    handler.use(() => {
+      throw new Error("test error");
+    });
+    handler.post(() => {
+      throw new Error("test error");
+    });
+
+    const app = createServer(handler);
+    return request(app).get("/").expect(404);
+  });
+
+  it("responds with custom 404 on no match", () => {
     function onNoMatch(req, res) {
       res.end("");
     }
