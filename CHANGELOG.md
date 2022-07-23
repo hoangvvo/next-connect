@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-next.3
+
+- router class rearchitecture by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/207
+- feat: add expressWrapper util by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/208
+
 ## 1.0.0-next.2
 
 - Edge Runtime Router by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/200
