@@ -9,7 +9,7 @@
 The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) and many other frameworks.
 
 > **Warning**
-> v1 is a complete rewrite of v0 and is not backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
+> v1 is a complete rewrite of v0 and is **not** backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
 
 > [v0](https://github.com/hoangvvo/next-connect/tree/v0), which is written to be compatible with Express.js middleware, is still maintained with bug fixes. v1 drops explicit support for Express.js middleware, but still provide a way to use them through a wrapper (see below)
 
@@ -40,20 +40,21 @@ Below are some use cases.
 ```typescript
 // pages/api/hello.js
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createRouter } from "next-connect";
+import { createRouter, expressWrapper } from "next-connect";
+import cors from "cors";
 
 // Default Req and Res are IncomingMessage and ServerResponse
 // You may want to pass in NextApiRequest and NextApiResponse
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
+  .use(expressWrapper(cors())) // express middleware are supported if you wrap it with expressWrapper
   .use(async (req, res, next) => {
     const start = Date.now();
     await next(); // call next in chain
     const end = Date.now();
     console.log(`Request took ${end - start}ms`);
   })
-  .use(authMiddleware)
   .get((req, res) => {
     res.send("Hello world");
   })
@@ -96,19 +97,20 @@ Edge Router can be used in [Edge Runtime](https://nextjs.org/docs/api-reference/
 ```ts
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { createEdgeRouter } from "next-connect";
+import cors from "cors";
 
 // Default Req and Evt are Request and unknown
 // You may want to pass in NextRequest and NextFetchEvent
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
 router
+  .use(expressWrapper(cors())) // express middleware are supported if you wrap it with expressWrapper
   .use(async (req, evt, next) => {
     const start = Date.now();
     await next(); // call next in chain
     const end = Date.now();
     console.log(`Request took ${end - start}ms`);
   })
-  .use(authMiddleware)
   .get((req, res) => {
     return new Response("Hello world");
   })
@@ -520,16 +522,8 @@ While this allows quick migration from Express.js, consider seperating routes in
 Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, we can build a wrapper like the below:
 
 ```js
+import { expressWrapper } from "next-connect";
 import someExpressMiddleware from "some-express-middleware";
-
-const expressWrapper = (middleware) => {
-  return async (req, res, next) => {
-    await new Promise((resolve, reject) => {
-      middleware(req, res, (err) => (err ? reject(err) : resolve()));
-    });
-    return next();
-  };
-};
 
 router.use(expressWrapper(someExpressMiddleware));
 ```
