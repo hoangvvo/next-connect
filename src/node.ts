@@ -4,6 +4,9 @@ import type {
   FindResult,
   HandlerOptions,
   HttpMethod,
+  Nextable,
+  RouteMatch,
+  RouteShortcutMethod,
   ValueOrPromise,
 } from "./types.js";
 
@@ -15,10 +18,51 @@ export type RequestHandler<
 export class NodeRouter<
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse
-> extends Router<RequestHandler<Req, Res>> {
-  constructor() {
-    super();
+> {
+  private router = new Router<RequestHandler<Req, Res>>();
+
+  private add(
+    method: HttpMethod | "",
+    route: RouteMatch | Nextable<RequestHandler<Req, Res>>,
+    ...fns: Nextable<RequestHandler<Req, Res>>[]
+  ) {
+    this.router.add(method, route, ...fns);
+    return this;
   }
+
+  public all: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "");
+  public get: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "GET");
+  public head: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "HEAD");
+  public post: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "POST");
+  public put: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "PUT");
+  public patch: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "PATCH");
+  public delete: RouteShortcutMethod<this, RequestHandler<Req, Res>> =
+    this.add.bind(this, "DELETE");
+
+  public use(
+    base:
+      | RouteMatch
+      | Nextable<RequestHandler<Req, Res>>
+      | NodeRouter<Req, Res>,
+    ...fns: (Nextable<RequestHandler<Req, Res>> | NodeRouter<Req, Res>)[]
+  ) {
+    if (typeof base === "function" || base instanceof NodeRouter) {
+      fns.unshift(base);
+      base = "/";
+    }
+    this.router.use(
+      base,
+      ...fns.map((fn) => (fn instanceof NodeRouter ? fn.router : fn))
+    );
+    return this;
+  }
+
   private prepareRequest(
     req: Req & { params?: Record<string, unknown> },
     res: Res,
@@ -29,8 +73,15 @@ export class NodeRouter<
       ...req.params, // original params will take precedence
     };
   }
+
+  public clone() {
+    const r = new NodeRouter();
+    r.router = this.router.clone();
+    return r;
+  }
+
   async run(req: Req, res: Res) {
-    const result = this.find(
+    const result = this.router.find(
       req.method as HttpMethod,
       getPathname(req.url as string)
     );
@@ -38,11 +89,12 @@ export class NodeRouter<
     this.prepareRequest(req, res, result);
     return Router.exec(result.fns, req, res);
   }
+
   handler(options: HandlerOptions<RequestHandler<Req, Res>> = {}) {
     const onNoMatch = options.onNoMatch || onnomatch;
     const onError = options.onError || onerror;
     return async (req: Req, res: Res) => {
-      const result = this.find(
+      const result = this.router.find(
         req.method as HttpMethod,
         getPathname(req.url as string)
       );
@@ -68,6 +120,7 @@ function onnomatch(req: IncomingMessage, res: ServerResponse) {
       : undefined
   );
 }
+
 function onerror(err: unknown, req: IncomingMessage, res: ServerResponse) {
   res.statusCode = 500;
   console.error(err);

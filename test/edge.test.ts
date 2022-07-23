@@ -1,15 +1,22 @@
 import { test } from "tap";
 import { spyOn } from "tinyspy";
 import { createEdgeRouter, EdgeRouter, getPathname } from "../src/edge.js";
+import { Router } from "../src/router.js";
+
+type AnyHandler = (...args: any[]) => any;
+
+const noop: AnyHandler = async () => {
+  /** noop */
+};
 
 const METHODS = ["GET", "HEAD", "PATCH", "DELETE", "POST", "PUT"];
 
 test("internals", (t) => {
   const ctx = new EdgeRouter();
-  t.ok(ctx instanceof EdgeRouter, "creates new `Router` instance");
-  t.ok(Array.isArray(ctx.routes), "~> has `routes` key (Array)");
-  t.type(ctx.add, "function", "~> has `add` method");
-  t.type(ctx.find, "function", "~> has `find` method");
+  t.ok(ctx instanceof EdgeRouter, "creates new `EdgeRouter` instance");
+  // @ts-expect-error: internal
+  t.ok(ctx.router instanceof Router, "~> has a `Router` instance");
+
   t.type(ctx.all, "function", "~> has `all` method");
   METHODS.forEach((str) => {
     t.type(ctx[str.toLowerCase()], "function", `~> has \`${str}\` method`);
@@ -19,6 +26,78 @@ test("internals", (t) => {
 
 test("createEdgeRouter() returns an instance", async (t) => {
   t.ok(createEdgeRouter() instanceof EdgeRouter);
+});
+
+test("add()", async (t) => {
+  const ctx = new EdgeRouter();
+  // @ts-expect-error: private property
+  const routerAddStub = spyOn(ctx.router, "add");
+  // @ts-expect-error: private property
+  const returned = ctx.add("GET", "/", noop);
+  t.same(routerAddStub.calls, [["GET", "/", noop]], "call router.add()");
+  t.equal(returned, ctx, "returned itself");
+});
+
+test("use()", async (t) => {
+  t.test("it defaults to / if base is not provided", async (t) => {
+    const ctx = new EdgeRouter();
+
+    // @ts-expect-error: private field
+    const useSpy = spyOn(ctx.router, "use");
+
+    ctx.use(noop);
+
+    t.same(useSpy.calls, [["/", noop]]);
+  });
+
+  t.test("it call this.router.use() with fn", async (t) => {
+    const ctx = new EdgeRouter();
+
+    // @ts-expect-error: private field
+    const useSpy = spyOn(ctx.router, "use");
+
+    ctx.use("/test", noop, noop);
+
+    t.same(useSpy.calls, [["/test", noop, noop]]);
+  });
+
+  t.test("it call this.router.use() with fn.router", async (t) => {
+    const ctx = new EdgeRouter();
+    const ctx2 = new EdgeRouter();
+
+    // @ts-expect-error: private field
+    const useSpy = spyOn(ctx.router, "use");
+
+    ctx.use("/test", ctx2, ctx2);
+
+    // @ts-expect-error: private field
+    t.same(useSpy.calls, [["/test", ctx2.router, ctx2.router]]);
+  });
+});
+
+test("clone()", (t) => {
+  const ctx = new EdgeRouter();
+  // @ts-expect-error: private property
+  ctx.router.routes = [noop, noop] as any[];
+  t.ok(ctx.clone() instanceof EdgeRouter, "is a NodeRouter instance");
+  t.not(ctx, ctx.clone(), "not the same identity");
+  // @ts-expect-error: private property
+  t.not(ctx.router, ctx.clone().router, "not the same router identity");
+  t.not(
+    // @ts-expect-error: private property
+    ctx.router.routes,
+    // @ts-expect-error: private property
+    ctx.clone().router.routes,
+    "routes are deep cloned (identity)"
+  );
+  t.same(
+    // @ts-expect-error: private property
+    ctx.router.routes,
+    // @ts-expect-error: private property
+    ctx.clone().router.routes,
+    "routes are deep cloned"
+  );
+  t.end();
 });
 
 test("run() - runs req and evt through fns and return last value", async (t) => {
@@ -328,7 +407,7 @@ test("prepareRequest() - attach params", async (t) => {
 
   const ctx2 = createEdgeRouter().get("/hello/:name");
   // @ts-expect-error: internal
-  ctx2.prepareRequest(req, {}, ctx2.find("GET", "/hello/world"));
+  ctx2.prepareRequest(req, {}, ctx2.router.find("GET", "/hello/world"));
   t.same(req.params, { name: "world" }, "params are attached");
 
   const reqWithParams = {
@@ -338,7 +417,8 @@ test("prepareRequest() - attach params", async (t) => {
   ctx2.prepareRequest(
     reqWithParams as unknown as Request,
     {},
-    ctx2.find("GET", "/hello/world")
+    // @ts-expect-error: internal
+    ctx2.router.find("GET", "/hello/world")
   );
   t.same(
     reqWithParams.params,
@@ -353,7 +433,8 @@ test("prepareRequest() - attach params", async (t) => {
   ctx2.prepareRequest(
     reqWithParams2 as unknown as Request,
     {},
-    ctx2.find("GET", "/hello/world")
+    // @ts-expect-error: internal
+    ctx2.router.find("GET", "/hello/world")
   );
   t.same(
     reqWithParams2.params,

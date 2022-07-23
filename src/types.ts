@@ -22,3 +22,8 @@ export interface HandlerOptions<Handler extends FunctionLike> {
 }
 
 export type ValueOrPromise<T> = T | Promise<T>;
+
+export type RouteShortcutMethod<This, H extends FunctionLike> = (
+  route: RouteMatch | Nextable<H>,
+  ...fns: Nextable<H>[]
+) => This;

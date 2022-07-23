@@ -13,7 +13,6 @@ import type {
 } from "./types.js";
 
 export type Route<H> = {
-  prefix?: string;
   method: HttpMethod | "";
   fns: (H | Router<H extends FunctionLike ? H : never>)[];
   isMiddle: boolean;
@@ -24,11 +23,6 @@ export type Route<H> = {
     }
   | { matchAll: true }
 );
-
-type RouteShortcutMethod<This, H extends FunctionLike> = (
-  route: RouteMatch | Nextable<H>,
-  ...fns: Nextable<H>[]
-) => This;
 
 export class Router<H extends FunctionLike> {
   constructor(
@@ -52,13 +46,6 @@ export class Router<H extends FunctionLike> {
     }
     return this;
   }
-  public all: RouteShortcutMethod<this, H> = this.add.bind(this, "");
-  public get: RouteShortcutMethod<this, H> = this.add.bind(this, "GET");
-  public head: RouteShortcutMethod<this, H> = this.add.bind(this, "HEAD");
-  public post: RouteShortcutMethod<this, H> = this.add.bind(this, "POST");
-  public put: RouteShortcutMethod<this, H> = this.add.bind(this, "PUT");
-  public patch: RouteShortcutMethod<this, H> = this.add.bind(this, "PATCH");
-  public delete: RouteShortcutMethod<this, H> = this.add.bind(this, "DELETE");
 
   public use(
     base: RouteMatch | Nextable<H> | Router<H>,
