@@ -6,7 +6,7 @@
 [![minified size](https://badgen.net/bundlephobia/min/next-connect)](https://bundlephobia.com/result?p=next-connect)
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 
-The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) and many other frameworks.
+The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) (API Routes, Edge API Routes, getServerSideProps, Middleware) and many other frameworks.
 
 > **Warning**
 > v1 is a complete rewrite of v0 and is **not** backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
@@ -90,6 +90,55 @@ export default router.handler({
 });
 ```
 
+### Next.js getServerSideProps
+
+```jsx
+// page/users/[id].js
+import { createRouter } from "next-connect";
+
+export default function Page({ user, updated }) {
+  return (
+    <div>
+      {updated && <p>User has been updated</p>}
+      <div>{JSON.stringify(user)}</div>
+      <form method="POST">{/* User update form */}</form>
+    </div>
+  );
+}
+
+const router = createRouter()
+  .use(async (req, res, next) => {
+    // this serve as the error handling middleware
+    try {
+      return await next();
+    } catch (e) {
+      return {
+        props: { error: e.message },
+      };
+    }
+  })
+  .use(async (req, res, next) => {
+    logRequest(req);
+    return next();
+  })
+  .get(async (req, res) => {
+    const user = await getUser(req.params.id);
+    if (!user) {
+      // https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props#notfound
+      return { props: { notFound: true } };
+    }
+    return { props: { user } };
+  })
+  .post(async (req, res) => {
+    const user = await updateUser(req);
+    return { props: { user, updated: true } };
+  });
+
+export async function getServerSideProps({ req, res }) {
+  return router.run(req, res);
+}
+```
+
 ### Next.js Edge API Routes (Beta)
 
 Edge Router can be used in [Edge Runtime](https://nextjs.org/docs/api-reference/edge-runtime)
@@ -152,52 +201,43 @@ export default router.handler({
 });
 ```
 
-### Next.js getServerSideProps
+### Next.js Middleware
 
-```jsx
-// page/users/[id].js
-import { createRouter } from "next-connect";
+Edge Router can be used in [Next.js Middleware](https://nextjs.org/docs/advanced-features/middleware)
 
-export default function Page({ user, updated }) {
-  return (
-    <div>
-      {updated && <p>User has been updated</p>}
-      <div>{JSON.stringify(user)}</div>
-      <form method="POST">{/* User update form */}</form>
-    </div>
-  );
-}
+```ts
+// middleware.ts
+import { NextResponse } from "next/server";
+import type { NextRequest, NextFetchEvent } from "next/server";
+import { createEdgeRouter } from "next-connect";
 
-const router = createRouter()
-  .use(async (req, res, next) => {
-    // this serve as the error handling middleware
-    try {
-      return await next();
-    } catch (e) {
-      return {
-        props: { error: e.message },
-      };
-    }
-  })
-  .use(async (req, res, next) => {
-    logRequest(req);
-    return next();
-  })
-  .get(async (req, res) => {
-    const user = await getUser(req.params.id);
-    if (!user) {
-      // https://nextjs.org/docs/api-reference/data-fetching/get-server-side-props#notfound
-      return { props: { notFound: true } };
-    }
-    return { props: { user } };
-  })
-  .post(async (req, res) => {
-    const user = await updateUser(req);
-    return { props: { user, updated: true } };
-  });
+// This function can be marked `async` if using `await` inside
 
-export async function getServerSideProps({ req, res }) {
-  return router.run(req, res);
+const router = createEdgeRouter<NextRequest, NextFetchEvent>();
+
+router.use(async (request, _, next) => {
+  await logRequest(request);
+  return next();
+});
+
+router.get("/about", (request) => {
+  return NextResponse.redirect(new URL("/about-2", request.url));
+});
+
+router.use("/dashboard", (request) => {
+  if (!isAuthenticated(request)) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+  return NextResponse.next();
+});
+
+router.all((request) => {
+  // default if none of the above matches
+  return NextResponse.next();
+});
+
+export function middleware(request: NextRequest) {
+  return NextResponse.redirect(new URL("/about-2", request.url));
 }
 ```
 
