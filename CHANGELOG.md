@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+
+- returns 404 if all matches are middleware on handler (edc99ddb7531dd399294158063cbfb2eb4fbe80d)
+- Bump dev dependencies (f2d9b1945c156c01d72b70f339d215c62d340ce5)
+- Build module using rollup (#190)
+
 ## 0.12.2
 
 - Add back next() in error handler
