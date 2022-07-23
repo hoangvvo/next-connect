@@ -13,7 +13,6 @@ import type {
 } from "./types.js";
 
 export type Route<H> = {
-  prefix?: string;
   method: HttpMethod | "";
   fns: (H | Router<H extends FunctionLike ? H : never>)[];
   isMiddle: boolean;

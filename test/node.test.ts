@@ -39,6 +39,43 @@ test("add()", async (t) => {
   t.equal(returned, ctx, "returned itself");
 });
 
+test("use()", async (t) => {
+  t.test("it defaults to / if base is not provided", async (t) => {
+    const ctx = new NodeRouter();
+
+    // @ts-expect-error: private field
+    const useSpy = spyOn(ctx.router, "use");
+
+    ctx.use(noop);
+
+    t.same(useSpy.calls, [["/", noop]]);
+  });
+
+  t.test("it call this.router.use() with fn", async (t) => {
+    const ctx = new NodeRouter();
+
+    // @ts-expect-error: private field
+    const useSpy = spyOn(ctx.router, "use");
+
+    ctx.use("/test", noop, noop);
+
+    t.same(useSpy.calls, [["/test", noop, noop]]);
+  });
+
+  t.test("it call this.router.use() with fn.router", async (t) => {
+    const ctx = new NodeRouter();
+    const ctx2 = new NodeRouter();
+
+    // @ts-expect-error: private field
+    const useSpy = spyOn(ctx.router, "use");
+
+    ctx.use("/test", ctx2, ctx2);
+
+    // @ts-expect-error: private field
+    t.same(useSpy.calls, [["/test", ctx2.router, ctx2.router]]);
+  });
+});
+
 test("clone()", (t) => {
   const ctx = new NodeRouter();
   // @ts-expect-error: private property
