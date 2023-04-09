@@ -236,9 +236,16 @@ router.all((request) => {
   return NextResponse.next();
 });
 
-export function middleware(request: NextRequest) {
-  return NextResponse.redirect(new URL("/about-2", request.url));
-}
+export default router.handler({
+  onError(err) {
+    return new NextResponse(JSON.stringify({ error: (err as Error).message }), {
+      status: 500,
+      headers: {
+        "content-type": "application/json",
+      },
+    })
+  },
+})
 ```
 
 ## API
