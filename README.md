@@ -6,12 +6,7 @@
 [![minified size](https://badgen.net/bundlephobia/min/next-connect)](https://bundlephobia.com/result?p=next-connect)
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 
-The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) (API Routes, Edge API Routes, getServerSideProps, Middleware) and many other frameworks.
-
-> **Warning**
-> v1 is a complete rewrite of v0 and is **not** backward-compatible. See [Releases](https://github.com/hoangvvo/next-connect/releases) to learn about the changes.
-
-> [v0](https://github.com/hoangvvo/next-connect/tree/v0), which is written to be compatible with Express.js middleware, is still maintained with bug fixes. v1 drops explicit support for Express.js middleware, but still provide a way to use them through a wrapper (see below)
+The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) [API Routes](#nextjs-api-routes), [Edge API Routes](#nextjs-edge-api-routes), [Middleware](#nextjs-middleware), Next.js App Router, and [getServerSideProps](#nextjs-getserversideprops).
 
 ## Features
 
@@ -29,13 +24,9 @@ npm install next-connect@next
 
 ## Usage
 
-> **Note**
->
-> Although `next-connect` is initially written for Next.js, it can be used in [http server](https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener), [Vercel](https://vercel.com/docs/concepts/functions/serverless-functions). See [Examples](./examples/) for more integrations.
-
-Below are some use cases.
-
 ### Next.js API Routes
+
+`next-connect` can be used in [API Routes](https://nextjs.org/docs/api-routes/introduction).
 
 ```typescript
 // pages/api/hello.js
@@ -65,8 +56,6 @@ router
   })
   .put(
     async (req, res, next) => {
-      // You may want to pass in NextApiRequest & { isLoggedIn: true }
-      // in createRouter generics to define this extra property
       if (!req.isLoggedIn) throw new Error("thrown stuff will be caught");
       // go to the next in chain
       return next();
@@ -76,6 +65,10 @@ router
       res.json({ user });
     }
   );
+
+export const config = {
+  runtime: "edge",
+};
 
 // create a handler from router with custom
 // onError and onNoMatch
@@ -90,10 +83,121 @@ export default router.handler({
 });
 ```
 
+### Next.js Edge API Routes
+
+`next-connect` can be used in [Edge API Routes](https://nextjs.org/docs/api-routes/edge-api-routes)
+
+```ts
+// pages/api/hello.js
+import type { NextFetchEvent, NextRequest } from "next/server";
+import { createEdgeRouter } from "next-connect";
+import cors from "cors";
+
+// Default Req and Evt are Request and unknown
+// You may want to pass in NextRequest and NextFetchEvent
+const router = createEdgeRouter<NextRequest, NextFetchEvent>();
+
+router
+  .use(async (req, event, next) => {
+    const start = Date.now();
+    await next(); // call next in chain
+    const end = Date.now();
+    console.log(`Request took ${end - start}ms`);
+  })
+  .get((req) => {
+    return new Response("Hello world");
+  })
+  .post(async (req) => {
+    // use async/await
+    const user = await insertUser(req.body.user);
+    return new Response(JSON.stringify({ user }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  })
+  .put(async (req) => {
+    const user = await updateUser(req.body.user);
+    return new Response(JSON.stringify({ user }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    });
+  });
+
+// create a handler from router with custom
+// onError and onNoMatch
+export default router.handler({
+  onError: (err, req, event) => {
+    console.error(err.stack);
+    return new NextResponse("Something broke!", {
+      status: 500,
+    });
+  },
+  onNoMatch: (req, event) => {
+    return new NextResponse("Page is not found", {
+      status: 404,
+    });
+  },
+});
+```
+
+### Next.js App Router
+
+`next-connect` can be used in [Next.js 13 Route Handler](https://beta.nextjs.org/docs/routing/route-handlers). The way handlers are written is almost the same to [Next.js Edge API Routes](#nextjs-edge-api-routes).
+
+```ts
+
+```
+
+### Next.js Middleware
+
+`next-connect` can be used in [Next.js Middleware](https://nextjs.org/docs/advanced-features/middleware)
+
+```ts
+// middleware.ts
+import { NextResponse } from "next/server";
+import type { NextRequest, NextFetchEvent } from "next/server";
+import { createEdgeRouter } from "next-connect";
+
+// This function can be marked `async` if using `await` inside
+
+const router = createEdgeRouter<NextRequest, NextFetchEvent>();
+
+router.use(async (request, event, next) => {
+  await logRequest(request);
+  return next();
+});
+
+router.get("/about", (request) => {
+  return NextResponse.redirect(new URL("/about-2", request.url));
+});
+
+router.use("/dashboard", (request) => {
+  if (!isAuthenticated(request)) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+  return NextResponse.next();
+});
+
+router.all((request) => {
+  // default if none of the above matches
+  return NextResponse.next();
+});
+
+export function middleware(request: NextRequest) {
+  return NextResponse.redirect(new URL("/about-2", request.url));
+}
+```
+
 ### Next.js getServerSideProps
 
+`next-connect` can be used in [getServerSideProps](https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props).
+
 ```jsx
-// page/users/[id].js
+// pages/users/[id].js
 import { createRouter } from "next-connect";
 
 export default function Page({ user, updated }) {
@@ -136,108 +240,6 @@ const router = createRouter()
 
 export async function getServerSideProps({ req, res }) {
   return router.run(req, res);
-}
-```
-
-### Next.js Edge API Routes (Beta)
-
-Edge Router can be used in [Edge Runtime](https://nextjs.org/docs/api-reference/edge-runtime)
-
-```ts
-import type { NextFetchEvent, NextRequest } from "next/server";
-import { createEdgeRouter } from "next-connect";
-import cors from "cors";
-
-// Default Req and Evt are Request and unknown
-// You may want to pass in NextRequest and NextFetchEvent
-const router = createEdgeRouter<NextRequest, NextFetchEvent>();
-
-router
-  .use(expressWrapper(cors())) // express middleware are supported if you wrap it with expressWrapper
-  .use(async (req, evt, next) => {
-    const start = Date.now();
-    await next(); // call next in chain
-    const end = Date.now();
-    console.log(`Request took ${end - start}ms`);
-  })
-  .get((req, res) => {
-    return new Response("Hello world");
-  })
-  .post(async (req, res) => {
-    // use async/await
-    const user = await insertUser(req.body.user);
-    res.json({ user });
-    return new Response(JSON.stringify({ user }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-    });
-  })
-  .put(async (req, res) => {
-    const user = await updateUser(req.body.user);
-    return new Response(JSON.stringify({ user }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-    });
-  });
-
-// create a handler from router with custom
-// onError and onNoMatch
-export default router.handler({
-  onError: (err, req, evt) => {
-    console.error(err.stack);
-    return new NextResponse("Something broke!", {
-      status: 500,
-    });
-  },
-  onNoMatch: (req, res) => {
-    return new NextResponse("Page is not found", {
-      status: 404,
-    });
-  },
-});
-```
-
-### Next.js Middleware
-
-Edge Router can be used in [Next.js Middleware](https://nextjs.org/docs/advanced-features/middleware)
-
-```ts
-// middleware.ts
-import { NextResponse } from "next/server";
-import type { NextRequest, NextFetchEvent } from "next/server";
-import { createEdgeRouter } from "next-connect";
-
-// This function can be marked `async` if using `await` inside
-
-const router = createEdgeRouter<NextRequest, NextFetchEvent>();
-
-router.use(async (request, _, next) => {
-  await logRequest(request);
-  return next();
-});
-
-router.get("/about", (request) => {
-  return NextResponse.redirect(new URL("/about-2", request.url));
-});
-
-router.use("/dashboard", (request) => {
-  if (!isAuthenticated(request)) {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-  return NextResponse.next();
-});
-
-router.all((request) => {
-  // default if none of the above matches
-  return NextResponse.next();
-});
-
-export function middleware(request: NextRequest) {
-  return NextResponse.redirect(new URL("/about-2", request.url));
 }
 ```
 
@@ -533,7 +535,7 @@ export async function getServerSideProps({ req, res }) {
 <details>
 <summary>Match multiple routes</summary>
 
-If you created the file `/api/<specific route>.js` folder, the handler will only run on that specific route.
+If you created the file `/api/<specific route>.js`, the handler will only run on that specific route.
 
 If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch-all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
 

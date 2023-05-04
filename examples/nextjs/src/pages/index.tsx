@@ -24,25 +24,19 @@ const Home: NextPage = () => {
           <code className={styles.code}>npm i next-connect</code>
         </p>
         <div className={styles.grid}>
-          <Link href="/gssp-users">
-            <a className={styles.card}>
-              <h2>Get Server Side Props</h2>
-              <p>Use next-connect in getServerSideProps</p>
-            </a>
+          <Link href="/gssp-users" className={styles.card}>
+            <h2>Get Server Side Props</h2>
+            <p>Use next-connect in getServerSideProps</p>
           </Link>
 
-          <Link href="/api-routes">
-            <a className={styles.card}>
-              <h2>API Routes</h2>
-              <p>Use next-connect in API Routes</p>
-            </a>
+          <Link href="/api-routes" className={styles.card}>
+            <h2>API Routes</h2>
+            <p>Use next-connect in API Routes</p>
           </Link>
 
-          <Link href="/edge-api-routes">
-            <a className={styles.card}>
-              <h2>Edge API Routes (Beta)</h2>
-              <p>Use next-connect in API Routes</p>
-            </a>
+          <Link href="/edge-api-routes" className={styles.card}>
+            <h2>Edge API Routes</h2>
+            <p>Use next-connect in API Routes</p>
           </Link>
         </div>
       </main>

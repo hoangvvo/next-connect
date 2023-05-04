@@ -61,11 +61,13 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
           <div className={styles.grid}>
             {users?.length ? (
               users.map((user) => (
-                <Link href={`/gssp-users/${user.id}`} key={user.id}>
-                  <a className={styles.card}>
-                    <h2>{user.name}</h2>
-                    <p>{user.age}</p>
-                  </a>
+                <Link
+                  href={`/gssp-users/${user.id}`}
+                  key={user.id}
+                  className={styles.card}
+                >
+                  <h2>{user.name}</h2>
+                  <p>{user.age}</p>
                 </Link>
               ))
             ) : (

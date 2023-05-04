@@ -6,7 +6,7 @@ import { validateUser } from "../../../utils/common";
 import { getUsers, randomId, saveUsers } from "../../../utils/edge-api";
 
 export const config = {
-  runtime: "experimental-edge",
+  runtime: "edge",
 };
 
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();

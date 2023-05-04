@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getUsers } from "../../../utils/edge-api";
 
 export const config = {
-  runtime: "experimental-edge",
+  runtime: "edge",
 };
 
 const router = createEdgeRouter<
