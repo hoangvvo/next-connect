@@ -47,21 +47,20 @@
   "homepage": "https://github.com/hoangvvo/next-connect#readme",
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/node14": "^1.0.3",
-    "@types/node": "^18.0.0",
-    "@types/tap": "^15.0.7",
-    "@typescript-eslint/eslint-plugin": "^5.30.3",
-    "@typescript-eslint/parser": "^5.30.3",
-    "c8": "^7.11.3",
-    "eslint": "^8.19.0",
-    "eslint-config-prettier": "^8.5.0",
+    "@types/node": "^18.16.3",
+    "@types/tap": "^15.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "@typescript-eslint/parser": "^5.59.2",
+    "c8": "^7.13.0",
+    "eslint": "^8.39.0",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.7.1",
-    "tap": "^16.3.0",
-    "tinyspy": "^1.0.0",
-    "ts-node": "^10.8.1",
-    "tscd": "^0.0.3",
-    "typescript": "^4.7.4"
+    "prettier": "^2.8.8",
+    "tap": "^16.3.4",
+    "tinyspy": "^2.1.0",
+    "ts-node": "^10.9.1",
+    "tscd": "^0.0.5",
+    "typescript": "^5.0.4"
   },
   "tap": {
     "node-arg": [
@@ -71,9 +70,10 @@
     "coverage": false
   },
   "dependencies": {
+    "@tsconfig/node16": "^1.0.3",
     "regexparam": "^2.0.1"
   },
   "engines": {
-    "node": ">=12.22.0"
+    "node": ">=16"
   }
 }
