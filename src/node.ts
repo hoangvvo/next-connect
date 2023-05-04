@@ -75,7 +75,7 @@ export class NodeRouter<
   }
 
   public clone() {
-    const r = new NodeRouter();
+    const r = new NodeRouter<Req, Res>();
     r.router = this.router.clone();
     return r;
   }

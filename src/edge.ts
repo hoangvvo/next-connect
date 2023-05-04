@@ -71,7 +71,7 @@ export class EdgeRouter<Req extends Request = Request, Ctx = unknown> {
   }
 
   public clone() {
-    const r = new EdgeRouter();
+    const r = new EdgeRouter<Req, Ctx>();
     r.router = this.router.clone();
     return r;
   }
