@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-next.4
+
+- fix: correct clone() type by @hoangvvo in https://github.com/hoangvvo/next-connect/commit/da2a5b19b471a8ff893825c6f7e03fba26617ed8
+
 ## 1.0.0-next.3
 
 - router class rearchitecture by @hoangvvo in https://github.com/hoangvvo/next-connect/pull/207
