@@ -29,17 +29,17 @@ npm install next-connect@next
 `next-connect` can be used in [API Routes](https://nextjs.org/docs/api-routes/introduction).
 
 ```typescript
-// pages/api/hello.js
+// pages/api/user/[id].ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter, expressWrapper } from "next-connect";
 import cors from "cors";
 
-// Default Req and Res are IncomingMessage and ServerResponse
-// You may want to pass in NextApiRequest and NextApiResponse
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
-  .use(expressWrapper(cors())) // express middleware are supported if you wrap it with expressWrapper
+  // Use express middleware in next-connect with expressWrapper function
+  .use(expressWrapper(passport.session()))
+  // A middleware example
   .use(async (req, res, next) => {
     const start = Date.now();
     await next(); // call next in chain
@@ -47,38 +47,25 @@ router
     console.log(`Request took ${end - start}ms`);
   })
   .get((req, res) => {
-    res.send("Hello world");
-  })
-  .post(async (req, res) => {
-    // use async/await
-    const user = await insertUser(req.body.user);
+    const user = getUser(req.query.id);
     res.json({ user });
   })
-  .put(
-    async (req, res, next) => {
-      if (!req.isLoggedIn) throw new Error("thrown stuff will be caught");
-      // go to the next in chain
-      return next();
-    },
-    async (req, res) => {
-      const user = await updateUser(req.body.user);
-      res.json({ user });
+  .put((req, res) => {
+    if (req.user.id !== req.query.id) {
+      throw new ForbiddenError("You can't update other user's profile");
     }
-  );
+    const user = await updateUser(req.body.user);
+    res.json({ user });
+  });
 
 export const config = {
   runtime: "edge",
 };
 
-// create a handler from router with custom
-// onError and onNoMatch
 export default router.handler({
   onError: (err, req, res) => {
     console.error(err.stack);
-    res.status(500).end("Something broke!");
-  },
-  onNoMatch: (req, res) => {
-    res.status(404).end("Page is not found");
+    res.status(err.statusCode || 500).end(err.message);
   },
 });
 ```
@@ -88,16 +75,15 @@ export default router.handler({
 `next-connect` can be used in [Edge API Routes](https://nextjs.org/docs/api-routes/edge-api-routes)
 
 ```ts
-// pages/api/hello.js
+// pages/api/user/[id].ts
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { createEdgeRouter } from "next-connect";
 import cors from "cors";
 
-// Default Req and Evt are Request and unknown
-// You may want to pass in NextRequest and NextFetchEvent
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
 router
+  // A middleware example
   .use(async (req, event, next) => {
     const start = Date.now();
     await next(); // call next in chain
@@ -105,40 +91,24 @@ router
     console.log(`Request took ${end - start}ms`);
   })
   .get((req) => {
-    return new Response("Hello world");
+    const id = req.nextUrl.searchParams.get("id");
+    const user = getUser(id);
+    return NextResponse.json({ user });
   })
-  .post(async (req) => {
-    // use async/await
-    const user = await insertUser(req.body.user);
-    return new Response(JSON.stringify({ user }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-    });
-  })
-  .put(async (req) => {
+  .put((req) => {
+    const id = req.nextUrl.searchParams.get("id");
+    if (req.user.id !== id) {
+      throw new ForbiddenError("You can't update other user's profile");
+    }
     const user = await updateUser(req.body.user);
-    return new Response(JSON.stringify({ user }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-    });
+    return NextResponse.json({ user });
   });
 
-// create a handler from router with custom
-// onError and onNoMatch
 export default router.handler({
   onError: (err, req, event) => {
     console.error(err.stack);
     return new NextResponse("Something broke!", {
-      status: 500,
-    });
-  },
-  onNoMatch: (req, event) => {
-    return new NextResponse("Page is not found", {
-      status: 404,
+      status: err.statusCode || 500,
     });
   },
 });
@@ -156,18 +126,17 @@ export default router.handler({
 
 `next-connect` can be used in [Next.js Middleware](https://nextjs.org/docs/advanced-features/middleware)
 
-```ts
+```typescript
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest, NextFetchEvent } from "next/server";
 import { createEdgeRouter } from "next-connect";
 
-// This function can be marked `async` if using `await` inside
-
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
 router.use(async (request, event, next) => {
-  await logRequest(request);
+  // logging request example
+  console.log(`${request.method} ${request.url}`);
   return next();
 });
 
@@ -182,14 +151,27 @@ router.use("/dashboard", (request) => {
   return NextResponse.next();
 });
 
-router.all((request) => {
+router.all(() => {
   // default if none of the above matches
   return NextResponse.next();
 });
 
-export function middleware(request: NextRequest) {
-  return NextResponse.redirect(new URL("/about-2", request.url));
+export function middleware(request: NextRequest, event: NextFetchEvent) {
+  return router.run(request, event);
 }
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
+};
 ```
 
 ### Next.js getServerSideProps
@@ -221,10 +203,6 @@ const router = createRouter()
       };
     }
   })
-  .use(async (req, res, next) => {
-    logRequest(req);
-    return next();
-  })
   .get(async (req, res) => {
     const user = await getUser(req.params.id);
     if (!user) {
@@ -233,7 +211,7 @@ const router = createRouter()
     }
     return { props: { user } };
   })
-  .post(async (req, res) => {
+  .put(async (req, res) => {
     const user = await updateUser(req);
     return { props: { user, updated: true } };
   });

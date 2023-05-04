@@ -8,7 +8,7 @@ export const getUsers = (req: NextRequest): User[] => {
   // we store all data in cookies for demo purposes
   const cookie = req.cookies.get(COOKIE_NAME);
   if (cookie) {
-    return JSON.parse(cookie);
+    return JSON.parse(cookie.value);
   }
   return [];
 };
