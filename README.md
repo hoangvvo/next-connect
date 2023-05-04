@@ -6,7 +6,7 @@
 [![minified size](https://badgen.net/bundlephobia/min/next-connect)](https://bundlephobia.com/result?p=next-connect)
 [![download/year](https://badgen.net/npm/dy/next-connect)](https://www.npmjs.com/package/next-connect)
 
-The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) [API Routes](#nextjs-api-routes), [Edge API Routes](#nextjs-edge-api-routes), [Middleware](#nextjs-middleware), Next.js App Router, and [getServerSideProps](#nextjs-getserversideprops).
+The promise-based method routing and middleware layer for [Next.js](https://nextjs.org/) [API Routes](#nextjs-api-routes), [Edge API Routes](#nextjs-edge-api-routes), [Middleware](#nextjs-middleware), [Next.js App Router](#nextjs-app-router), and [getServerSideProps](#nextjs-getserversideprops).
 
 ## Features
 
@@ -23,6 +23,8 @@ npm install next-connect@next
 ```
 
 ## Usage
+
+Also check out the [examples](./examples/) folder.
 
 ### Next.js API Routes
 
@@ -74,7 +76,7 @@ export default router.handler({
 
 `next-connect` can be used in [Edge API Routes](https://nextjs.org/docs/api-routes/edge-api-routes)
 
-```ts
+```typescript
 // pages/api/user/[id].ts
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { createEdgeRouter } from "next-connect";
@@ -116,10 +118,52 @@ export default router.handler({
 
 ### Next.js App Router
 
-`next-connect` can be used in [Next.js 13 Route Handler](https://beta.nextjs.org/docs/routing/route-handlers). The way handlers are written is almost the same to [Next.js Edge API Routes](#nextjs-edge-api-routes).
+`next-connect` can be used in [Next.js 13 Route Handler](https://beta.nextjs.org/docs/routing/route-handlers). The way handlers are written is almost the same to [Next.js Edge API Routes](#nextjs-edge-api-routes) by using `createEdgeRouter`.
 
-```ts
+```typescript
+// app/api/user/[id].ts
 
+import type { NextFetchEvent, NextRequest } from "next/server";
+import { createEdgeRouter } from "next-connect";
+import cors from "cors";
+
+interface RequestContext {
+  params: {
+    id: string;
+  };
+}
+
+const router = createEdgeRouter<NextRequest, RequestContext>();
+
+router
+  // A middleware example
+  .use(async (req, event, next) => {
+    const start = Date.now();
+    await next(); // call next in chain
+    const end = Date.now();
+    console.log(`Request took ${end - start}ms`);
+  })
+  .get((req) => {
+    const id = req.params.id;
+    const user = getUser(id);
+    return NextResponse.json({ user });
+  })
+  .put((req) => {
+    const id = req.params.id;
+    if (req.user.id !== id) {
+      throw new ForbiddenError("You can't update other user's profile");
+    }
+    const user = await updateUser(req.body.user);
+    return NextResponse.json({ user });
+  });
+
+export async function GET(request: NextRequest, ctx: RequestContext) {
+  return router.run(request, ctx);
+}
+
+export async function PUT(request: NextRequest, ctx: RequestContext) {
+  return router.run(request, ctx);
+}
 ```
 
 ### Next.js Middleware
@@ -505,50 +549,6 @@ export async function getServerSideProps({ req, res }) {
   };
 }
 ```
-
-## Recipes
-
-### Next.js
-
-<details>
-<summary>Match multiple routes</summary>
-
-If you created the file `/api/<specific route>.js`, the handler will only run on that specific route.
-
-If you need to create all handlers for all routes in one file (similar to `Express.js`). You can use [Optional catch-all API routes](https://nextjs.org/docs/api-routes/dynamic-api-routes#optional-catch-all-api-routes).
-
-```javascript
-// pages/api/[[...slug]].js
-import { createRouter } from "next-connect";
-
-const router = createRouter()
-  .use("/api/hello", someMiddleware())
-  .get("/api/user/:userId", (req, res) => {
-    res.send(`Hello ${req.params.userId}`);
-  });
-
-export default router.handler();
-```
-
-While this allows quick migration from Express.js, consider seperating routes into different files (`/api/user/[userId].js`, `/api/hello.js`) in the future.
-
-</details>
-
-### Express.js Compatibility
-
-<details>
-<summary>Middleware wrapper</summary>
-
-Express middleware is not built around promises but callbacks. This prevents it from playing well in the `next-connect` model. Understanding the way express middleware works, we can build a wrapper like the below:
-
-```js
-import { expressWrapper } from "next-connect";
-import someExpressMiddleware from "some-express-middleware";
-
-router.use(expressWrapper(someExpressMiddleware));
-```
-
-</details>
 
 ## Contributing
 

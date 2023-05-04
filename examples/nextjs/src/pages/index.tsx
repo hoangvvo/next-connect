@@ -1,6 +1,5 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import Image from "next/image";
 import Link from "next/link";
 import styles from "../styles/styles.module.css";
 
@@ -25,7 +24,7 @@ const Home: NextPage = () => {
         </p>
         <div className={styles.grid}>
           <Link href="/gssp-users" className={styles.card}>
-            <h2>Get Server Side Props</h2>
+            <h2>GetServerSideProps</h2>
             <p>Use next-connect in getServerSideProps</p>
           </Link>
 
@@ -36,22 +35,10 @@ const Home: NextPage = () => {
 
           <Link href="/edge-api-routes" className={styles.card}>
             <h2>Edge API Routes</h2>
-            <p>Use next-connect in API Routes</p>
+            <p>Use next-connect in Edge API Routes</p>
           </Link>
         </div>
       </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
     </div>
   );
 };

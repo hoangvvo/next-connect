@@ -12,20 +12,13 @@ const EdgeApiRoutesPage: NextPage = () => {
       </Head>
       <main className={styles.main}>
         <h1 className={styles.title}>
-          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/api/edge-users">
+          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/src/pages/api/edge-users">
             Edge API Routes
           </a>{" "}
           example
         </h1>
         <p>
-          <a
-            href="https://nextjs.org/docs/api-routes/edge-api-routes"
-            style={{ color: "#0070f3" }}
-          >
-            Edge API Routes
-          </a>{" "}
-          built with next-connect. Open your devtool (<code>F12</code>) and try
-          the following snippets.
+          Open your devtool (<code>F12</code>) and try the following snippets.
         </p>
         <h2>
           <code className={styles.code}>POST /api/edge-users</code>

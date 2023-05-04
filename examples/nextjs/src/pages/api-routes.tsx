@@ -12,20 +12,13 @@ const ApiRoutesPage: NextPage = () => {
       </Head>
       <main className={styles.main}>
         <h1 className={styles.title}>
-          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/api/users">
+          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/src/pages/api/users">
             API Routes
           </a>{" "}
           example
         </h1>
         <p>
-          <a
-            href="https://nextjs.org/docs/api-routes/introduction"
-            style={{ color: "#0070f3" }}
-          >
-            API Routes
-          </a>{" "}
-          built with next-connect. Open your devtool (<code>F12</code>) and try
-          the following snippets.
+          Open your devtool (<code>F12</code>) and try the following snippets.
         </p>
         <h2>
           <code className={styles.code}>POST /api/users</code>

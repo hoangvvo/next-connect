@@ -30,7 +30,7 @@ const UsersPage: NextPage<PageProps> = ({ users, error }) => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/pages/gssp-users/index.tsx">
+          <a href="https://github.com/hoangvvo/next-connect/tree/main/examples/nextjs/src/pages/gssp-users/index.tsx">
             getServerSideProps
           </a>{" "}
           Example
