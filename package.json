@@ -29,7 +29,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tscd --entry index.js",
-    "test": "c8 tap",
+    "test": "c8 tap test/*.test.ts",
     "prepublishOnly": "npm run clean && npm run test && npm run build",
     "coverage": "c8 report --reporter=lcov",
     "lint": "eslint ./src --ext json,ts --ignore-path .gitignore",
@@ -49,6 +49,7 @@
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/node": "^18.16.3",
+    "@types/react": "18.2.14",
     "@types/tap": "^15.0.8",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
@@ -59,6 +60,8 @@
     "express": "^4.18.2",
     "next": "^13.4.9",
     "prettier": "^2.8.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tap": "^16.3.4",
     "tinyspy": "^2.1.0",
     "ts-node": "^10.9.1",
