@@ -121,7 +121,7 @@ export default router.handler({
 `next-connect` can be used in [Next.js 13 Route Handler](https://beta.nextjs.org/docs/routing/route-handlers). The way handlers are written is almost the same to [Next.js Edge API Routes](#nextjs-edge-api-routes) by using `createEdgeRouter`.
 
 ```typescript
-// app/api/user/[id].ts
+// app/api/user/[id]/route.ts
 
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { createEdgeRouter } from "next-connect";
