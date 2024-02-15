@@ -157,7 +157,7 @@ router
     return NextResponse.json({ user });
   });
 
-// Make sure to cast the handler to `Promise<NextResponse>` to prevent type error with next.js 14 app router in production/preview deployments.
+// Make sure to cast the handler return to `Promise<NextResponse>` to prevent type error with next.js 14 app router in production/preview deployments.
 export async function GET(request: NextRequest, ctx: RequestContext) {
   return router.run(request, ctx) as Promise<NextResponse>;
 }
